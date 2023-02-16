@@ -40,7 +40,7 @@ class VetoProximity(strax.OverlapWindowPlugin):
              'such that one will never cut events that are < YY ns.'
     )
 
-    veto_names = ['busy', 'busy_he', 'hev', 'straxen_deadtime', 'software_veto']
+    veto_names = ['busy', 'busy_he', 'hev', 'straxen_deadtime', 'software']
 
     def infer_dtype(self):
         dtype = []
@@ -88,16 +88,19 @@ class VetoProximity(strax.OverlapWindowPlugin):
         result_buffer[f'time_to_previous_{veto_name}'] = self.time_no_aqmon_veto_found
         result_buffer[f'time_to_next_{veto_name}'] = self.time_no_aqmon_veto_found
 
+        
         selected_intervals = veto_intervals[veto_intervals['veto_type'] == f'{veto_name}_veto']
         if not len(selected_intervals):
             return
 
         vetos_during_event = strax.touching_windows(selected_intervals,
                                                     event_window)
+        
 
         # Figure out the vetos *during* an event
         for event_i, veto_window in enumerate(vetos_during_event):
             if veto_window[1] - veto_window[0]:
+
                 vetos_in_window = selected_intervals[veto_window[0]:
                                                      veto_window[1]].copy()
                 starts = np.clip(vetos_in_window['time'],
