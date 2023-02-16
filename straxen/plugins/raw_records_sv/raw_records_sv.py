@@ -1,6 +1,7 @@
 import numpy as np
 import strax
 import straxen
+from immutabledict import immutabledict
 
 export, __all__ = strax.exporter()
 
@@ -8,6 +9,14 @@ from straxen.plugins.raw_records.daqreader import SOFTWARE_VETO_CHANNEL
 
 
 @export
+@strax.takes_config(
+
+    # All these must have track=False, so the raw_records hash never changes!
+
+    # DAQ settings -- should match settings given to redax
+    strax.Option('record_length', default=110, track=False, type=int,
+                 help="Number of samples per raw_record"),
+    )
 class RawRecordsSoftwareVeto(strax.Plugin):
     
     """
@@ -20,7 +29,7 @@ class RawRecordsSoftwareVeto(strax.Plugin):
     
     depends_on = ('raw_records', 'raw_records_aqmon', 'event_info')
 
-     provides = (
+    provides = (
         'raw_records_sv',
         'raw_records_aqmon_sv',
     )
@@ -40,9 +49,10 @@ class RawRecordsSoftwareVeto(strax.Plugin):
     
     
     def infer_dtype(self):
-
-        d = 'raw_records'
-        return self.deps[d].dtype_for(d)
+        return {
+            d: strax.raw_record_dtype(
+                samples_per_record=self.config["record_length"])
+            for d in self.provides}
     
     def software_veto_mask(self, e):
         
@@ -50,7 +60,7 @@ class RawRecordsSoftwareVeto(strax.Plugin):
         
         return m
             
-    def compute(self, raw_records, events):
+    def compute(self, raw_records, raw_records_aqmon, events):
             
         result = dict()
 
@@ -61,7 +71,7 @@ class RawRecordsSoftwareVeto(strax.Plugin):
 
         dt = raw_records[0]['dt']
 
-        result['raw_records_aqmon_sv'] = _software_veto_time(
+        result['raw_records_aqmon_sv'] = self._software_veto_time(
             start=events_to_delete['time'],
             end=events_to_delete['endtime'],
             dt=dt
@@ -84,11 +94,11 @@ class RawRecordsSoftwareVeto(strax.Plugin):
     
     def _software_veto_time(self, start, end, dt):
         return strax.dict_to_rec(
-            dict(time=[start],
-                 length=[(end - start) // dt],
+            dict(time=start,
+                 length=(end - start) // dt,
                  dt=np.repeat(dt, len(start)),
-                 channel=np.repeat(SOFTWARE_VETO_CHANNEL, len(start)),
-            self.dtype_for('raw_records')))
+                 channel=np.repeat(SOFTWARE_VETO_CHANNEL, len(start))),
+            self.dtype_for('raw_records_sv'))
     
 @export
 class RawRecordsDownSample(strax.Plugin):
