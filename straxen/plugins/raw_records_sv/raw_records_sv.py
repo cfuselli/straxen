@@ -20,9 +20,11 @@ from straxen.plugins.raw_records.daqreader import SOFTWARE_VETO_CHANNEL
 class RawRecordsSoftwareVeto(strax.Plugin):
     
     """
+
     Software veto for raw records
     Depends on event_info
 
+    contact: Carlo Fuselli (cfuselli@nikhef.nl)
     """
         
     __version__ = '0.0.5'
