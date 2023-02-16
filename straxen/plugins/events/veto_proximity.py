@@ -40,7 +40,7 @@ class VetoProximity(strax.OverlapWindowPlugin):
              'such that one will never cut events that are < YY ns.'
     )
 
-    veto_names = ['busy', 'busy_he', 'hev', 'straxen_deadtime']
+    veto_names = ['busy', 'busy_he', 'hev', 'straxen_deadtime', 'software_veto']
 
     def infer_dtype(self):
         dtype = []

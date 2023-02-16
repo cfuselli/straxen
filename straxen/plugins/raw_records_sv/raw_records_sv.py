@@ -4,6 +4,9 @@ import straxen
 
 export, __all__ = strax.exporter()
 
+from straxen.plugins.raw_records.daqreader import SOFTWARE_VETO_CHANNEL
+
+
 @export
 class RawRecordsSoftwareVeto(strax.Plugin):
     
@@ -15,9 +18,23 @@ class RawRecordsSoftwareVeto(strax.Plugin):
         
     __version__ = '0.0.5'
     
-    depends_on = ('raw_records', 'event_info')
-    provides = 'raw_records_sv'
-    data_kind = 'raw_records_sv'
+    depends_on = ('raw_records', 'raw_records_aqmon', 'event_info')
+
+     provides = (
+        'raw_records_sv',
+        'raw_records_aqmon_sv',
+    )
+
+    data_kind = immutabledict(zip(provides, provides))
+    parallel = 'process'
+    chunk_target_size_mb = 50
+    rechunk_on_save = immutabledict(
+        raw_records_sv=False,
+        raw_records_aqmon_sv=True,
+    )
+    compressor = 'lz4'
+    input_timeout = 300
+
 
     window = 0 # ns? should pass as options
     
@@ -35,12 +52,25 @@ class RawRecordsSoftwareVeto(strax.Plugin):
             
     def compute(self, raw_records, events):
             
-        ee = events[self.software_veto_mask(events)]
-        
-        return self.get_touching(raw_records, ee)
+        result = dict()
+
+        events_to_delete = events[self.software_veto_mask(events)]
+
+        veto_mask = self.get_touching_mask(raw_records, events_to_delete)
+        result['raw_records_sv'] = raw_records[~veto_mask]
+
+        dt = raw_records[0]['dt']
+
+        result['raw_records_aqmon_sv'] = _software_veto_time(
+            start=events_to_delete['time'],
+            end=events_to_delete['endtime'],
+            dt=dt
+            )
+
+        return result
     
     
-    def get_touching(self, things, containers):
+    def get_touching_mask(self, things, containers):
         
         # start with keep everything
         mask = np.full(len(things), True)
@@ -50,9 +80,15 @@ class RawRecordsSoftwareVeto(strax.Plugin):
             mask[i0:i1] = False
 
         # return only the things outside the containers
-        return things[mask]
+        return mask
     
-    
+    def _software_veto_time(self, start, end, dt):
+        return strax.dict_to_rec(
+            dict(time=[start],
+                 length=[(end - start) // dt],
+                 dt=np.repeat(dt, len(start)),
+                 channel=np.repeat(SOFTWARE_VETO_CHANNEL, len(start)),
+            self.dtype_for('raw_records')))
     
 @export
 class RawRecordsDownSample(strax.Plugin):
