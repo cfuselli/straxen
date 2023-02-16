@@ -69,7 +69,7 @@ class RawRecordsSoftwareVeto(strax.Plugin):
         events_to_delete = events[self.software_veto_mask(events)]
 
         veto_mask = self.get_touching_mask(raw_records, events_to_delete)
-        result['raw_records_sv'] = raw_records[~veto_mask]
+        result['raw_records_sv'] = raw_records[veto_mask]
 
         dt = raw_records[0]['dt']
 
