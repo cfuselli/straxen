@@ -1,6 +1,7 @@
 import numpy as np
 import strax
 import straxen
+from immutabledict import immutabledict
 
 export, __all__ = strax.exporter()
 
@@ -24,13 +25,25 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
     
     depends_on = ('raw_records', 'raw_records_aqmon', 'event_info')
 
+    provides = (
+        'raw_records_sv',
+        'raw_records_aqmon_sv',
+    )
+
+    data_kind = immutabledict(zip(provides, provides))
+
+    rechunk_on_save = immutabledict(
+        raw_records_sv=False,
+        raw_records_aqmon_sv=True,
+    )
+
     parallel = 'process'
     chunk_target_size_mb = 50
     compressor = 'lz4'
     input_timeout = 300
 
+    # TODO test with window > 0 
     window = 0 # ns (should pass as option)
-    
     
     def infer_dtype(self):
         return {

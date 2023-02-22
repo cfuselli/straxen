@@ -1,2 +1,1 @@
-from . import radial_veto
-from .radial_veto import *
+# we don't want to import software veto plugins by default
