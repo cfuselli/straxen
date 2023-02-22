@@ -12,7 +12,7 @@ class RadialVeto(RawRecordsSoftwareVetoBase):
     Deletes raw records of events outside certain r
     """
 
-    __version__ = '0.0.1'
+    __version__ = 'radial-veto-0.0.1'
 
     def software_veto_mask(self, e):
         
@@ -27,7 +27,7 @@ class HighEnergyVeto(RawRecordsSoftwareVetoBase):
     Deletes raw records for events with high s1 and s2 area
     """
 
-    __version__ = '0.0.1'
+    __version__ = 'high-energy-veto-0.0.1'
 
     def software_veto_mask(self, e):
         
