@@ -51,7 +51,7 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
                 samples_per_record=self.config["record_length"])
             for d in self.provides}
     
-    def software_veto_mask(self, e):
+    def software_veto_mask(self, events):
                 
         return NotImplementedError("""
             This is a base plugin, 
