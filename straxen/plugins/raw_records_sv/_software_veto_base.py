@@ -42,15 +42,17 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
     compressor = 'lz4'
     input_timeout = 300
 
-    # TODO test with window > 0 
-    window = 0 # ns (should pass as option)
-    
-    # this is for pre_scaling (keep a fracion of the events we want to delete)
-    # 0   to delete all non-wanted raw_records
-    # 0.5 to keep half of the non-wanted raw_records
-    # 1   the software veto is basically deactivated
-    pre_scaling_factor = 0
 
+    software_veto_touching_window = straxen.URLConfig(
+        default=int(0), infer_type=False,
+        help='Strax touching window for container and thing (raw_records and events).')
+
+    software_veto_pre_scaling = straxen.URLConfig(
+        default=int(0), infer_type=False,
+        help='This sets the pre_scaling factor (keep a fracion of the events we want to delete)'
+             '  0   to delete all non-wanted raw_records'
+             '  0.5 to keep half of the non-wanted raw_records'
+             '  1   the software veto is basically deactivated')
 
     def infer_dtype(self):
         return {
@@ -74,7 +76,7 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
 
         # apply pre-scaling
         r = np.random.random(len(events_to_delete))
-        pre_scaling_mask = (r<pre_scaling_factor)
+        pre_scaling_mask = (r<self.software_veto_pre_scaling)
         events_to_delete = events_to_delete[pre_scaling_mask]
 
         # get mask of raw_records to delete
@@ -101,7 +103,7 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
         mask = np.full(len(things), True)
 
         # throw away things inside every container 
-        for i0, i1 in strax.touching_windows(things, containers, window=self.window):
+        for i0, i1 in strax.touching_windows(things, containers, window=self.software_veto_touching_window):
             mask[i0:i1] = False
 
         # return only the things outside the containers
