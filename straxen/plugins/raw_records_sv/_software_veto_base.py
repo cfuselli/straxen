@@ -45,6 +45,13 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
     # TODO test with window > 0 
     window = 0 # ns (should pass as option)
     
+    # this is for pre_scaling (keep a fracion of the events we want to delete)
+    # 0   to delete all non-wanted raw_records
+    # 0.5 to keep half of the non-wanted raw_records
+    # 1   the software veto is basically deactivated
+    pre_scaling_factor = 0
+
+
     def infer_dtype(self):
         return {
             d: strax.raw_record_dtype(
@@ -61,8 +68,16 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
             
         result = dict()
         dt = raw_records[0]['dt']
+
+        # define events of which to delete raw_records
         events_to_delete = events[self.software_veto_mask(events)]
 
+        # apply pre-scaling
+        r = np.random.random(len(events_to_delete))
+        pre_scaling_mask = (r<pre_scaling_factor)
+        events_to_delete = events_to_delete[pre_scaling_mask]
+
+        # get mask of raw_records to delete
         veto_mask = self.get_touching_mask(raw_records, events_to_delete)
         
         # Result: raw_records to keep
