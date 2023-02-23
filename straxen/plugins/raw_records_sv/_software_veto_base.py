@@ -23,7 +23,10 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
         
     __version__ = '0.0.5'
     
-    depends_on = ('raw_records', 'raw_records_aqmon', 'event_info')
+    # if extra dependency on i.e. peaks_proximity is needed, 
+    # redefine the depends_on in the software_vet0.py plugin (see ExamplePeakLevel)
+    # keeping the order raw_records, raw_records_aqmon, peaks, events
+    depends_on = ('raw_records', 'raw_records_aqmon', 'peak_basics', 'event_info')
 
     provides = (
         'raw_records_sv',
@@ -42,6 +45,8 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
     compressor = 'lz4'
     input_timeout = 300
 
+    # can be either 'events' or 'peaks'
+    veto_mask_on = 'events'
 
     software_veto_touching_window = straxen.URLConfig(
         default=int(0), infer_type=False,
@@ -60,27 +65,31 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
                 samples_per_record=self.config["record_length"])
             for d in self.provides}
     
-    def software_veto_mask(self, events):
+    def software_veto_mask(self, objects):
                 
         return NotImplementedError("""
             This is a base plugin, 
             please build a plugin with this function""")
             
-    def compute(self, raw_records, raw_records_aqmon, events):
+    def compute(self, raw_records, raw_records_aqmon, peaks, events):
             
         result = dict()
-        dt = raw_records[0]['dt']
 
         # define events of which to delete raw_records
-        events_to_delete = events[self.software_veto_mask(events)]
+        if self.veto_mask_on == 'events':
+            objects_to_delete = events[self.software_veto_mask(events)]
+        elif self.veto_mask_on == 'peaks':
+            objects_to_delete = peaks[self.software_veto_mask(peaks)]
+        else:
+            return NotImplementedError("Currently possible to cut on events or peaks data-kinds only")
 
-        # apply pre-scaling
-        r = np.random.random(len(events_to_delete))
-        pre_scaling_mask = (r<self.software_veto_pre_scaling)
-        events_to_delete = events_to_delete[pre_scaling_mask]
+        # apply pre-scaling and update objects to delete
+        r = np.random.random(len(objects_to_delete))
+        pre_scaling_mask = (r>self.software_veto_pre_scaling)
+        objects_to_delete = objects_to_delete[pre_scaling_mask]
 
         # get mask of raw_records to delete
-        veto_mask = self.get_touching_mask(raw_records, events_to_delete)
+        veto_mask = self.get_touching_mask(raw_records, objects_to_delete)
         
         # Result: raw_records to keep
         result[self.provides[0]] = raw_records[veto_mask]
@@ -90,15 +99,18 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
             np.concatenate([
                 raw_records_aqmon,
                 self._software_veto_time(
-                    start=events_to_delete['time'],
-                    end=events_to_delete['endtime'],
-                    dt=dt
+                    start=objects_to_delete['time'],
+                    end=strax.endtime(objects_to_delete),
+                    dt=raw_records[0]['dt']
                     )]))
 
         return result
     
     def get_touching_mask(self, things, containers):
         
+        # things = raw_records
+        # containers = i.e. events
+
         # start with keep everything
         mask = np.full(len(things), True)
 
@@ -110,6 +122,7 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
         return mask
     
     def _software_veto_time(self, start, end, dt):
+
         return strax.dict_to_rec(
             dict(time=start,
                  length=(end - start) // dt,

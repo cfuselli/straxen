@@ -34,3 +34,19 @@ class HighEnergyVeto(RawRecordsSoftwareVetoBase):
         m = (e['s1_area'] > 1000) & (e['s2_area'] > 100000)
         
         return m
+
+@export
+class ExamplePeakLevel(RawRecordsSoftwareVetoBase):
+    """
+    High energy sofrtare veto 
+    Deletes raw records for events with high s1 and s2 area
+    """
+
+    __version__ = 'example-peak-level-0.0.1'
+    veto_mask_on = 'peaks'
+
+    def software_veto_mask(self, p):
+        
+        m = (p['type'] == 2) & (p['area'] > 100000)
+        
+        return m
