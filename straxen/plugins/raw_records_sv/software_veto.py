@@ -38,13 +38,16 @@ class HighEnergyVeto(RawRecordsSoftwareVetoBase):
 @export
 class ExamplePeakLevel(RawRecordsSoftwareVetoBase):
     """
-    High energy sofrtare veto 
-    Deletes raw records for events with high s1 and s2 area
+    Example veto on peak level, needs to specify veto_mask_on
     """
 
-    __version__ = 'example-peak-level-0.0.1'
-    veto_mask_on = 'peaks'
+    __version__ = 'example-peak-level-0.0.2'
+    depends_on = ('raw_records', 'raw_records_aqmon', 'peak_basics')    
 
+    def compute(self, raw_records, raw_records_aqmon, peaks):
+        # base class written to work on events, but we just care about the time intervals
+        return super().compute(raw_records, raw_records_aqmon, events=peaks)
+	
     def software_veto_mask(self, p):
         
         m = (p['type'] == 2) & (p['area'] > 100000)

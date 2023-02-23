@@ -26,7 +26,7 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
     # if extra dependency on i.e. peaks_proximity is needed, 
     # redefine the depends_on in the software_vet0.py plugin (see ExamplePeakLevel)
     # keeping the order raw_records, raw_records_aqmon, peaks, events
-    depends_on = ('raw_records', 'raw_records_aqmon', 'peak_basics', 'event_info')
+    depends_on = ('raw_records', 'raw_records_aqmon', 'event_info')
 
     provides = (
         'raw_records_sv',
@@ -44,9 +44,6 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
     chunk_target_size_mb = 50
     compressor = 'lz4'
     input_timeout = 300
-
-    # can be either 'events' or 'peaks'
-    veto_mask_on = 'events'
 
     software_veto_touching_window = straxen.URLConfig(
         default=int(0), infer_type=False,
@@ -71,17 +68,12 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
             This is a base plugin, 
             please build a plugin with this function""")
             
-    def compute(self, raw_records, raw_records_aqmon, peaks, events):
+    def compute(self, raw_records, raw_records_aqmon, events):
             
         result = dict()
 
         # define events of which to delete raw_records
-        if self.veto_mask_on == 'events':
-            objects_to_delete = events[self.software_veto_mask(events)]
-        elif self.veto_mask_on == 'peaks':
-            objects_to_delete = peaks[self.software_veto_mask(peaks)]
-        else:
-            return NotImplementedError("Currently possible to cut on events or peaks data-kinds only")
+        objects_to_delete = events[self.software_veto_mask(events)]
 
         # apply pre-scaling and update objects to delete
         r = np.random.random(len(objects_to_delete))
