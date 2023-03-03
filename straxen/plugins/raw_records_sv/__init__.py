@@ -1,0 +1,1 @@
+# we don't want to import software veto plugins by default
