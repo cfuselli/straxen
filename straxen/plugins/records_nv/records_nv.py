@@ -53,7 +53,7 @@ class nVETOPulseProcessing(strax.Plugin):
 
     def infer_dtype(self):
         record_length = strax.record_length_from_dtype(
-            self.deps[self.depends_on].dtype_for(self.depends_on))
+            self.deps[self.depends_on[0]].dtype_for(self.depends_on[0]))
         dtype = strax.record_dtype(record_length)
         return dtype
 

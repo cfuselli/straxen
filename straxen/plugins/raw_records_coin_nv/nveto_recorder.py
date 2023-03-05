@@ -90,7 +90,7 @@ class nVETORecorder(strax.Plugin):
 
     def infer_dtype(self):
         self.record_length = strax.record_length_from_dtype(
-            self.deps[self.depends_on].dtype_for(self.depends_on))
+            self.deps[self.depends_on[0]].dtype_for(self.depends_on[0]))
 
         channel_range = self.channel_map['nveto']
         n_channel = (channel_range[1] - channel_range[0]) + 1
