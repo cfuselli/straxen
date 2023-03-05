@@ -64,7 +64,8 @@ class MergedS2s(strax.OverlapWindowPlugin):
         self.to_pe = self.gain_model
 
     def infer_dtype(self):
-        return strax.unpack_dtype(self.deps['peaklets'].dtype_for('peaklets'))
+        _dtype_for = self.depends_on[0]
+        return strax.unpack_dtype(self.deps[_dtype_for].dtype_for(_dtype_for))
 
     def get_window_size(self):
         return 5 * (int(self.s2_merge_gap_thresholds[0][1])

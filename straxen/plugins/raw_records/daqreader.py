@@ -190,11 +190,14 @@ class DAQReader(strax.Plugin):
         return False
 
     def _load_chunk(self, path, start, end, kind='central'):
+
+        _dtype_for = self.depends_on[0] # raw_records
+
         records = [
             strax.load_file(
                 fn,
                 compressor=self.config["daq_compressor"],
-                dtype=self.dtype_for('raw_records'))
+                dtype=self.dtype_for(_dtype_for))
             for fn in sorted(glob.glob(f'{path}/*'))]
         records = np.concatenate(records)
         records = strax.sort_by_time(records)
@@ -271,12 +274,16 @@ class DAQReader(strax.Plugin):
         return result, break_time
 
     def _artificial_dead_time(self, start, end, dt):
+
+        _dtype_for = self.depends_on[0] # raw_records
+
+
         return strax.dict_to_rec(
             dict(time=[start],
                  length=[(end - start) // dt],
                  dt=[dt],
                  channel=[ARTIFICIAL_DEADTIME_CHANNEL]),
-            self.dtype_for('raw_records'))
+            self.dtype_for(_dtype_for))
 
     def compute(self, chunk_i):
         dt_central = self.config['daq_chunk_duration']

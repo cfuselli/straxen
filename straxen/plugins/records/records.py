@@ -121,7 +121,7 @@ class PulseProcessing(strax.Plugin):
     def infer_dtype(self):
         # Get record_length from the plugin making raw_records
         self.record_length = strax.record_length_from_dtype(
-            self.deps['raw_records'].dtype_for('raw_records'))
+            self.deps[self.depends_on].dtype_for(self.depends_on))
 
         dtype = dict()
         for p in self.provides:

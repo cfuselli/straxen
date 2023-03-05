@@ -146,7 +146,9 @@ class EventBasics(strax.Plugin):
         parse x_mlp et cetera if needed to get the algorithms used and
         set required class attributes
         """
-        posrec_fields = self.deps['peak_positions'].dtype_for('peak_positions').names
+        _dtype_for = self.depends_on[2]
+
+        posrec_fields = self.deps[_dtype_for].dtype_for(_dtype_for).names
         posrec_names = [d.split('_')[-1] for d in posrec_fields if 'x_' in d]
 
         # Preserve order. "set" is not ordered and dtypes should always be ordered
