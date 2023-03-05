@@ -299,10 +299,6 @@ def new_context(cores=args.cores,
         context.storage[0].readonly = True
         context.storage[0].local_only = True
 
-    if software_veto_is_on():
-        
-        register_software_veto_plugins(context)
-
     return context
 
 
@@ -1201,6 +1197,17 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                          timeout=timeout,
                          )
 
+        if software_veto_is_on():
+        
+            software_veto_register_raw_records(st)
+            software_veto_register_fly(st, run_id)
+            for t in targets:
+                post_processing.append(t+'_sv')
+            _post_processing = post_processing.copy()
+            for t in _post_processing:
+                post_processing.append(t+'_sv')
+            
+            
         for t in ('raw_records', 'records', 'records_nv', 'hitlets_nv'):
             # Set the (raw)records processor to the inferred one
             st._plugin_class_registry[t].compressor = records_compressor
@@ -1664,7 +1671,7 @@ def software_veto_is_on():
     # TODO
     return True
 
-def register_software_veto_plugins(context):
+def software_veto_register_raw_records(st):
     """Based on the selection that we want to apply, 
     register the correct veto plugin.
     Probably we want to pass it as argument and if possible overwrite it from rundoc.
@@ -1672,11 +1679,60 @@ def register_software_veto_plugins(context):
     """
 
     # TODO
-    plugin_name = 'RadialVeto'
+    veto_name = 'RadialVeto'
 
     import straxen.plugins.raw_records_sv.software_veto as software_veto
-    plugin = getattr(straxen.plugins.raw_records_sv.software_veto, plugin_name)
-    context.register(plugin)
+    veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, veto_name)
+    st.register(veto_plugin)
+
+def software_veto_register_fly(st, run_id):
+    """We make a copy of every original plugin
+    for the software veto adding a _sv to the provides.
+    Computation is tricky because requires initialisation
+    of plugin to copy. Also requires no hardcoded data_types
+    in plugins (see https://github.com/cfuselli/straxen/pull/3)
+    """
+
+    registry = st._plugin_class_registry.copy().items()
+
+    _plugins = []
+    for name, pl in registry:
+        if pl == straxen.DAQReader:
+            pass
+        elif pl == straxen.Fake1TDAQReader:
+            pass
+        elif pl == software_veto.RadialVeto:
+            pass
+        elif name.endswith('_sv'): # ext_timings_nv_sv_sv ?? 
+            pass
+        elif pl in _plugins:
+            pass
+        else:
+            
+            # I need initialisation to save myself
+            _pl = st.get_single_plugin(run_id, name)
+
+            provides = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
+            depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
+            
+            class TempPlugin(pl):
+                provides = provides
+                depends_on = depends_on
+                data_kind = _pl.data_kind
+
+                if _pl.multi_output:
+                    dtype = {prov+'_sv': _pl.dtype_for(prov)
+                           for prov in pl.provides}
+                else:
+                    dtype = _pl.dtype_for(name)
+                    
+                def infer_dtype(self):
+                    return self.dtype
+                
+            log.info(f"Registering software veto copy of {pl}")
+            st.register(TempPlugin)
+
+        _plugins.append(pl)
 
 
 
