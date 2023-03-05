@@ -86,6 +86,9 @@ parser.add_argument(
 parser.add_argument(
     '--max_messages', type=int, default=10,
     help="number of max mailbox messages")
+parser.add_argument(
+    '--software_veto', type=int, default=None,
+    help="Class name of veto plugin to apply (i.e.: RadialVeto)")
 
 
 actions = parser.add_mutually_exclusive_group()
@@ -295,6 +298,11 @@ def new_context(cores=args.cores,
                            strax.DataDirectory(output_folder)]
         context.storage[0].readonly = True
         context.storage[0].local_only = True
+
+    if software_veto_is_on():
+        
+        register_software_veto_plugins(context)
+
     return context
 
 
@@ -1640,6 +1648,37 @@ def cleanup_db():
                 break
             fail_run(rd, failure_message.format(**rd))
             abandon(mongo_id=rd['_id'])
+
+
+
+
+###########################
+# Software veto functions #
+###########################
+
+
+
+def software_veto_is_on():
+    """Decide if software veto is on based on arguments or rundoc"""
+    
+    # TODO
+    return True
+
+def register_software_veto_plugins(context):
+    """Based on the selection that we want to apply, 
+    register the correct veto plugin.
+    Probably we want to pass it as argument and if possible overwrite it from rundoc.
+    Then register a copy of all the plugins. 
+    """
+
+    # TODO
+    plugin_name = 'RadialVeto'
+
+    import straxen.plugins.raw_records_sv.software_veto as software_veto
+    plugin = getattr(straxen.plugins.raw_records_sv.software_veto, plugin_name)
+    context.register(plugin)
+
+
 
 
 if __name__ == '__main__':
