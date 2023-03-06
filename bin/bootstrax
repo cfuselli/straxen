@@ -17,9 +17,6 @@ https://straxen.readthedocs.io/en/latest/bootstrax.html
 """
 __version__ = '3.0.0'
 
-import sys
-sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
-
 import argparse
 import typing
 from datetime import datetime, timedelta, timezone
@@ -274,6 +271,9 @@ if os.access(output_folder, os.W_OK) is not True:
     message = f'No writing access to {output_folder}'
     log.warning(message)
     raise IOError(message)
+
+
+
 
 
 def new_context(cores=args.cores,
@@ -1216,10 +1216,6 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                 _post_processing.append(t+'_sv')
             post_processing = tuple(_post_processing)
 
-            for t in ('raw_records', 'records', 'records_nv', 'hitlets_nv'):
-                # Set the (raw)records processor to the inferred one
-                st._plugin_class_registry[t+'_sv'].compressor = records_compressor
-
         # Make a function for running strax, call the function to process the run
         # This way, it can also be run inside a wrapper to profile strax
         def st_make():
@@ -1239,6 +1235,9 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                     allow_multiple=True,
                     config=strax_config,
                     max_workers=cores)
+
+            for temp_plugin in software_veto_plugin_classes:
+                st.register(temp_plugin)
 
             if len(post_processing):
                 for post_target in post_processing:
@@ -1395,6 +1394,8 @@ def process_run(rd, send_heartbeats=args.production):
         run_strax_config.update(infer_target(rd))
         run_strax_config.update(infer_mode(rd))
         run_strax_config['debug'] = args.debug
+
+        log.info(f"We'll try to process the run with pathos + dill")
         strax_proc = multiprocessing.Process(
             target=run_strax,
             kwargs=run_strax_config)
@@ -1711,6 +1712,10 @@ def software_veto_register_raw_records(st, args, rundoc=None):
     veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, veto_name)
     st.register(veto_plugin)
 
+
+
+software_veto_plugin_classes = []
+
 def software_veto_register_fly(st, run_id):
     """We make a copy of every original plugin
     for the software veto adding a _sv to the provides.
@@ -1735,34 +1740,36 @@ def software_veto_register_fly(st, run_id):
             pass
         else:
             
+            new_plugin_class = type(name+'_sv', (pl,), {})
+
             # I need initialisation to save myself
             init_pl = st.get_single_plugin(run_id, name)
 
-            class TempPlugin(pl):
-                provides = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
-                depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
+            new_plugin_class.provides = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
+            new_plugin_classdepends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
 
-                if isinstance(init_pl.data_kind, dict):
-                    data_kind = {t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in init_pl.data_kind}
-                else:
-                    data_kind = init_pl.data_kind+'_sv'
+            if isinstance(init_pl.data_kind, dict):
+                new_plugin_class.data_kind = {t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in init_pl.data_kind}
+            else:
+                new_plugin_class.data_kind = init_pl.data_kind+'_sv'
 
-                if isinstance(pl.save_when, immutabledict):
-                    save_when = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.save_when})
+            if isinstance(pl.save_when, immutabledict):
+                new_plugin_class.save_when = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.save_when})
 
-                if isinstance(pl.rechunk_on_save, immutabledict):
-                    rechunk_on_save = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.rechunk_on_save})
+            if isinstance(pl.rechunk_on_save, immutabledict):
+                new_plugin_class.rechunk_on_save = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.rechunk_on_save})
 
-                if init_pl.multi_output:
-                    dtype = {prov+'_sv': init_pl.dtype_for(prov) for prov in pl.provides}
-                else:
-                    dtype = init_pl.dtype_for(name)
-                    
-                def infer_dtype(self):
-                    return self.dtype
+            if init_pl.multi_output:
+                new_plugin_class.dtype = {prov+'_sv': init_pl.dtype_for(prov) for prov in pl.provides}
+            else:
+                new_plugin_class.dtype = init_pl.dtype_for(name)
                 
-            log.info(f"Registering software veto copy of {pl}")
-            st.register(TempPlugin)
+            def new_infer_dtype(self):
+                return self.dtype
+
+            new_plugin_class.infer_dtype = new_infer_dtype
+
+            software_veto_plugin_classes.append(new_plugin_class)
 
         _plugins.append(pl)
 
