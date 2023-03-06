@@ -326,6 +326,7 @@ if not args.undying:
 
 
 def main():
+
     if args.cores == -1:
         # Use all of the available cores on this machine
         args.cores = multiprocessing.cpu_count()
@@ -1788,6 +1789,12 @@ def software_veto_register_raw_records(st, args, rundoc=None):
 ###########################
 
 if __name__ == '__main__':
+
+    # to avoid warnings pymongo fork
+    multiprocessing.set_start_method('spawn')
+    multiprocess.set_start_method('spawn')
+
+
     if not args.undying:
         main()
     else:

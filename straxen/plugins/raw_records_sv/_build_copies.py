@@ -72,9 +72,9 @@ for name, pl in registry:
         depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
 
         if isinstance(init_pl.data_kind, dict):
-            data_kind = {t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in init_pl.data_kind}
+            data_kind = {t.replace('_sv','')+'_sv':init_pl.data_kind[t] for t in init_pl.data_kind}
         else:
-            data_kind = init_pl.data_kind+'_sv'
+            data_kind = "'"+str(init_pl.data_kind+'_sv')+"'"
             
         if isinstance(pl.save_when, immutabledict):
             save_when = str(immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.save_when}))
@@ -103,8 +103,9 @@ class {pl.__name__}SV(straxen.{pl.__name__}):
     depends_on = {depends_on}
     provides = {provides}
     dtype = {dtype}
+    data_kind = {data_kind}
 
-    def new_infer_dtype(self):
+    def infer_dtype(self):
         return self.dtype
 
 """
