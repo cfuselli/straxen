@@ -99,24 +99,24 @@ for name, pl in registry:
         classtofile = f"""
 
 class {pl.__name__}SV(straxen.{pl.__name__}):
-depends_on = {depends_on}
-provides = {provides}
-dtype = {dtype}
+    depends_on = {depends_on}
+    provides = {provides}
+    dtype = {dtype}
 
-def new_infer_dtype(self):
-    return self.dtype
+    def new_infer_dtype(self):
+        return self.dtype
 
 """
         tofile += classtofile
         
         if isinstance(pl.save_when, immutabledict):
             tofile += f"""
-save_when = {save_when}
+    save_when = {save_when}
 """
     
         if isinstance(pl.rechunk_on_save, immutabledict):
             tofile += f"""
-rechunk_on_save = {rechunk_on_save}
+    rechunk_on_save = {rechunk_on_save}
 """
 
     _plugins.append(pl)
