@@ -109,7 +109,6 @@ class VetoIntervals(strax.OverlapWindowPlugin):
         n_software_veto = len(software_veto)
 
         if n_software_veto:
-            print(n_software_veto, vetos_seen, software_veto['time'])
             result[vetos_seen:vetos_seen+n_software_veto]['time'] = software_veto['time']
             result[vetos_seen:vetos_seen+n_software_veto]['endtime'] = strax.endtime(software_veto)
             result[vetos_seen:vetos_seen+n_software_veto]['veto_type'] = 'software_veto'
