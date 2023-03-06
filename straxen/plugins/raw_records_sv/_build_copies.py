@@ -25,14 +25,15 @@ save_when_replacers = {"'":'',
              '3':'',
              '4':'',
              ': ':'',
-             'Save':': strax.Save',
+             'Save':'=strax.Save',
             }
 
 rechunk_replacers = {"'":'',
              '<':'',
              '>':'',
              '{':'',
-             '}':''
+             '}':'',
+             ':':'='
             }
 
 

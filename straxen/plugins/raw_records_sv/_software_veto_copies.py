@@ -467,9 +467,9 @@ class PulseProcessingSV(straxen.PulseProcessing):
         return self.dtype
 
 
-    save_when = immutabledict(records_sv: strax.SaveWhen.TARGET, veto_regions_sv: strax.SaveWhen.TARGET, pulse_counts_sv: strax.SaveWhen.ALWAYS)
+    save_when = immutabledict(records_sv=strax.SaveWhen.TARGET, veto_regions_sv=strax.SaveWhen.TARGET, pulse_counts_sv=strax.SaveWhen.ALWAYS)
 
-    rechunk_on_save = immutabledict(records_sv: False, veto_regions_sv: True, pulse_counts_sv: True)
+    rechunk_on_save = immutabledict(records_sv= False, veto_regions_sv= True, pulse_counts_sv= True)
 
 
 class PulseProcessingHighEnergySV(straxen.PulseProcessingHighEnergy):
@@ -481,7 +481,7 @@ class PulseProcessingHighEnergySV(straxen.PulseProcessingHighEnergy):
         return self.dtype
 
 
-    rechunk_on_save = immutabledict(records_he_sv: False, pulse_counts_he_sv: True)
+    rechunk_on_save = immutabledict(records_he_sv= False, pulse_counts_he_sv= True)
 
 
 class S2ReconPosDiffSV(straxen.S2ReconPosDiff):
@@ -613,7 +613,7 @@ class nVETORecorderSV(straxen.nVETORecorder):
         return self.dtype
 
 
-    save_when = immutabledict(raw_records_coin_nv_sv: strax.SaveWhen.TARGET, lone_raw_records_nv_sv: strax.SaveWhen.TARGET, lone_raw_record_statistics_nv_sv: strax.SaveWhen.ALWAYS)
+    save_when = immutabledict(raw_records_coin_nv_sv=strax.SaveWhen.TARGET, lone_raw_records_nv_sv=strax.SaveWhen.TARGET, lone_raw_record_statistics_nv_sv=strax.SaveWhen.ALWAYS)
 
 
 class nVetoExtTimingsSV(straxen.nVetoExtTimings):
