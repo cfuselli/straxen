@@ -15,7 +15,10 @@ How to use
 For more info, see the documentation:
 https://straxen.readthedocs.io/en/latest/bootstrax.html
 """
-__version__ = '2.0.0'
+__version__ = '3.0.0'
+
+import sys
+sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
 
 import argparse
 import typing
@@ -39,6 +42,7 @@ import straxen
 import threading
 import pandas as pd
 import typing as ty
+from immutabledict import immutabledict
 import daqnt
 import fnmatch
 from glob import glob
@@ -87,9 +91,8 @@ parser.add_argument(
     '--max_messages', type=int, default=10,
     help="number of max mailbox messages")
 parser.add_argument(
-    '--software_veto', type=int, default=None,
-    help="Class name of veto plugin to apply (i.e.: RadialVeto)")
-
+    '--software_veto', default=False,
+    help="Class name of veto plugin to apply (i.e.: RadialVeto). It's overwritten by rundoc value.")
 
 actions = parser.add_mutually_exclusive_group()
 actions.add_argument(
@@ -1197,20 +1200,25 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                          timeout=timeout,
                          )
 
-        if software_veto_is_on():
-        
-            software_veto_register_raw_records(st)
-            software_veto_register_fly(st, run_id)
-            for t in targets:
-                post_processing.append(t+'_sv')
-            _post_processing = post_processing.copy()
-            for t in _post_processing:
-                post_processing.append(t+'_sv')
-            
-            
         for t in ('raw_records', 'records', 'records_nv', 'hitlets_nv'):
             # Set the (raw)records processor to the inferred one
             st._plugin_class_registry[t].compressor = records_compressor
+
+        if software_veto_is_on(args):
+        
+            software_veto_register_raw_records(st, args)
+            software_veto_register_fly(st, run_id)
+
+            _post_processing = list(post_processing)
+            for t in targets:
+                _post_processing.append(t+'_sv')
+            for t in post_processing:
+                _post_processing.append(t+'_sv')
+            post_processing = tuple(_post_processing)
+
+            for t in ('raw_records', 'records', 'records_nv', 'hitlets_nv'):
+                # Set the (raw)records processor to the inferred one
+                st._plugin_class_registry[t+'_sv'].compressor = records_compressor
 
         # Make a function for running strax, call the function to process the run
         # This way, it can also be run inside a wrapper to profile strax
@@ -1665,13 +1673,31 @@ def cleanup_db():
 
 
 
-def software_veto_is_on():
+def software_veto_is_on(args, rundoc=None):
     """Decide if software veto is on based on arguments or rundoc"""
     
-    # TODO
-    return True
+    # TODO add rundoc option
+    if (args.software_veto == None) | (args.software_veto is False):
+        return False
+    else:
+        return True
 
-def software_veto_register_raw_records(st):
+def software_veto_get_name(args, rundoc=None):
+    """Get the needed raw_records plugin"""
+    
+    plugin_name = args.software_veto
+
+    # TODO overwrite from rundoc
+    # TODO add option if you want to overwrite from argument
+
+    
+    return plugin_name
+    
+
+
+
+
+def software_veto_register_raw_records(st, args, rundoc=None):
     """Based on the selection that we want to apply, 
     register the correct veto plugin.
     Probably we want to pass it as argument and if possible overwrite it from rundoc.
@@ -1679,7 +1705,7 @@ def software_veto_register_raw_records(st):
     """
 
     # TODO
-    veto_name = 'RadialVeto'
+    veto_name = software_veto_get_name(args, rundoc=None)
 
     import straxen.plugins.raw_records_sv.software_veto as software_veto
     veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, veto_name)
@@ -1701,7 +1727,7 @@ def software_veto_register_fly(st, run_id):
             pass
         elif pl == straxen.Fake1TDAQReader:
             pass
-        elif pl == software_veto.RadialVeto:
+        elif pl == straxen.plugins.raw_records_sv.software_veto.RadialVeto:
             pass
         elif name.endswith('_sv'): # ext_timings_nv_sv_sv ?? 
             pass
@@ -1712,17 +1738,24 @@ def software_veto_register_fly(st, run_id):
             # I need initialisation to save myself
             _pl = st.get_single_plugin(run_id, name)
 
-            provides = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
-            depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
-            
             class TempPlugin(pl):
-                provides = provides
-                depends_on = depends_on
-                data_kind = _pl.data_kind
+                provides = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
+                depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
+
+                if isinstance(pl.save_when, dict):
+                    data_kind = _pl.data_kind
+                    data_kind = {t.replace('_sv','')+'_sv':_pl.save_when[t] for t in _pl.data_kind}
+                else:
+                    data_kind = _pl.data_kind+'_sv'
+
+                if isinstance(pl.save_when, immutabledict):
+                    save_when = immutabledict({t.replace('_sv','')+'_sv':_pl.save_when[t] for t in pl.save_when})
+
+                if isinstance(pl.rechunk_on_save, immutabledict):
+                    rechunk_on_save = immutabledict({t.replace('_sv','')+'_sv':_pl.save_when[t] for t in pl.rechunk_on_save})
 
                 if _pl.multi_output:
-                    dtype = {prov+'_sv': _pl.dtype_for(prov)
-                           for prov in pl.provides}
+                    dtype = {prov+'_sv': _pl.dtype_for(prov) for prov in pl.provides}
                 else:
                     dtype = _pl.dtype_for(name)
                     
@@ -1735,7 +1768,9 @@ def software_veto_register_fly(st, run_id):
         _plugins.append(pl)
 
 
-
+########################### 
+#        __MAIN__         #
+###########################
 
 if __name__ == '__main__':
     if not args.undying:

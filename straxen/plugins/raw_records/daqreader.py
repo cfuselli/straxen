@@ -191,7 +191,7 @@ class DAQReader(strax.Plugin):
 
     def _load_chunk(self, path, start, end, kind='central'):
 
-        _dtype_for = self.depends_on[0] # raw_records
+        _dtype_for = self.provides[0] # raw_records
 
         records = [
             strax.load_file(
