@@ -1736,28 +1736,27 @@ def software_veto_register_fly(st, run_id):
         else:
             
             # I need initialisation to save myself
-            _pl = st.get_single_plugin(run_id, name)
+            init_pl = st.get_single_plugin(run_id, name)
 
             class TempPlugin(pl):
                 provides = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
                 depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
 
-                if isinstance(pl.save_when, dict):
-                    data_kind = _pl.data_kind
-                    data_kind = {t.replace('_sv','')+'_sv':_pl.save_when[t] for t in _pl.data_kind}
+                if isinstance(init_pl.data_kind, dict):
+                    data_kind = {t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in init_pl.data_kind}
                 else:
-                    data_kind = _pl.data_kind+'_sv'
+                    data_kind = init_pl.data_kind+'_sv'
 
                 if isinstance(pl.save_when, immutabledict):
-                    save_when = immutabledict({t.replace('_sv','')+'_sv':_pl.save_when[t] for t in pl.save_when})
+                    save_when = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.save_when})
 
                 if isinstance(pl.rechunk_on_save, immutabledict):
-                    rechunk_on_save = immutabledict({t.replace('_sv','')+'_sv':_pl.save_when[t] for t in pl.rechunk_on_save})
+                    rechunk_on_save = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.rechunk_on_save})
 
-                if _pl.multi_output:
-                    dtype = {prov+'_sv': _pl.dtype_for(prov) for prov in pl.provides}
+                if init_pl.multi_output:
+                    dtype = {prov+'_sv': init_pl.dtype_for(prov) for prov in pl.provides}
                 else:
-                    dtype = _pl.dtype_for(name)
+                    dtype = init_pl.dtype_for(name)
                     
                 def infer_dtype(self):
                     return self.dtype
