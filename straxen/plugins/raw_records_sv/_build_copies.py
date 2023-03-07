@@ -72,7 +72,7 @@ for name, pl in registry:
         depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
 
         if isinstance(init_pl.data_kind, dict):
-            data_kind = {t.replace('_sv','')+'_sv':init_pl.data_kind[t] for t in init_pl.data_kind}
+            data_kind = {t.replace('_sv','')+'_sv':init_pl.data_kind[t]+'_sv' for t in init_pl.data_kind}
         else:
             data_kind = "'"+str(init_pl.data_kind+'_sv')+"'"
             
