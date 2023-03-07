@@ -11,6 +11,8 @@ import json
 import importlib
 import sys
 
+sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
