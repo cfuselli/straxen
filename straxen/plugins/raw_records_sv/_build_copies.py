@@ -152,6 +152,7 @@ class {pl.__name__}SV(straxen.{pl.__name__}):
 
 """
 
+    tofile += classtofile
     _plugins.append(pl)
 
 
