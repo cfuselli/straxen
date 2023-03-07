@@ -1703,10 +1703,9 @@ class PeakletsSV(straxen.Peaklets):
         result = super().compute(**_kwargs)
 
         
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -1740,10 +1739,9 @@ class PeakletsSV(straxen.Peaklets):
         result = super().compute(**_kwargs)
 
         
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -1883,51 +1881,9 @@ class PulseProcessingSV(straxen.PulseProcessing):
         result = super().compute(**_kwargs)
 
         
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
-
-
-
-
-class PulseProcessingSV(straxen.PulseProcessing):
-    depends_on = ['raw_records_sv']
-    provides = ['records_sv', 'veto_regions_sv', 'pulse_counts_sv']
-    dtype = {'records_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Length of pulse to which the record belongs (without zero-padding)', 'pulse_length'), '<i4'), (('Fragment number in the pulse', 'record_i'), '<i2'), (('Integral in ADC counts x samples', 'area'), '<i4'), (('Level of data reduction applied (strax.ReductionLevel enum)', 'reduction_level'), 'u1'), (('Baseline in ADC counts. data = int(baseline) - data_orig', 'baseline'), '<f4'), (('Baseline RMS in ADC counts. data = baseline - data_orig', 'baseline_rms'), '<f4'), (('Multiply data by 2**(this number). Baseline is unaffected.', 'amplitude_bit_shift'), '<i2'), (('Waveform data in raw counts above integer part of baseline', 'data'), '<i2', (110,))], 'veto_regions_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Integral [ADC x samples]', 'area'), '<f4'), (('Index of sample in record in which hit starts', 'left'), '<i2'), (('Index of first sample in record just beyond hit (exclusive bound)', 'right'), '<i2'), (('For lone hits, index of sample in record where integration starts', 'left_integration'), '<i2'), (('For lone hits, index of first sample beyond integration region', 'right_integration'), '<i2'), (('Internal (temporary) index of fragment in which hit was found', 'record_i'), '<i4'), (('ADC threshold applied in order to find hits', 'threshold'), '<f4'), (('Maximum amplitude above baseline [ADC counts]', 'height'), '<f4')], 'pulse_counts_sv': [(('Start time of the chunk', 'time'), '<i8'), (('End time of the chunk', 'endtime'), '<i8'), (('Number of pulses', 'pulse_count'), '<i8', (494,)), (('Number of lone pulses', 'lone_pulse_count'), '<i8', (494,)), (('Integral of all pulses in ADC_count x samples', 'pulse_area'), '<i8', (494,)), (('Integral of lone pulses in ADC_count x samples', 'lone_pulse_area'), '<i8', (494,)), (('Average baseline', 'baseline_mean'), '<i2', (494,)), (('Average baseline rms', 'baseline_rms_mean'), '<f4', (494,))]}
-    data_kind = {'records_sv': 'records_sv', 'veto_regions_sv': 'veto_regions_sv', 'pulse_counts_sv': 'pulse_counts_sv'}
-    
-    save_when = immutabledict(records_sv=strax.SaveWhen.TARGET, veto_regions_sv=strax.SaveWhen.TARGET, pulse_counts_sv=strax.SaveWhen.ALWAYS)
-    
-    
-    rechunk_on_save = immutabledict(records_sv= False, veto_regions_sv= True, pulse_counts_sv= True)
-    
-
-    def __init__(self):
-        super().__init__()
-        self.compute_takes_chunk_i = False
-        self.compute_takes_start_end = True
-
-    def infer_dtype(self):
-        super().infer_dtype()
-        return self.dtype
-
-    def compute(self, **kwargs):
-        
-        _kwargs = {}
-        for k,v in kwargs.items():
-            if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[k.replace('_sv', '')] = v
-            else:
-                _kwargs[k] = v
-
-        result = super().compute(**_kwargs)
-
-        
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -1965,10 +1921,49 @@ class PulseProcessingSV(straxen.PulseProcessing):
         result = super().compute(**_kwargs)
 
         
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+
+
+
+class PulseProcessingSV(straxen.PulseProcessing):
+    depends_on = ['raw_records_sv']
+    provides = ['records_sv', 'veto_regions_sv', 'pulse_counts_sv']
+    dtype = {'records_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Length of pulse to which the record belongs (without zero-padding)', 'pulse_length'), '<i4'), (('Fragment number in the pulse', 'record_i'), '<i2'), (('Integral in ADC counts x samples', 'area'), '<i4'), (('Level of data reduction applied (strax.ReductionLevel enum)', 'reduction_level'), 'u1'), (('Baseline in ADC counts. data = int(baseline) - data_orig', 'baseline'), '<f4'), (('Baseline RMS in ADC counts. data = baseline - data_orig', 'baseline_rms'), '<f4'), (('Multiply data by 2**(this number). Baseline is unaffected.', 'amplitude_bit_shift'), '<i2'), (('Waveform data in raw counts above integer part of baseline', 'data'), '<i2', (110,))], 'veto_regions_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Integral [ADC x samples]', 'area'), '<f4'), (('Index of sample in record in which hit starts', 'left'), '<i2'), (('Index of first sample in record just beyond hit (exclusive bound)', 'right'), '<i2'), (('For lone hits, index of sample in record where integration starts', 'left_integration'), '<i2'), (('For lone hits, index of first sample beyond integration region', 'right_integration'), '<i2'), (('Internal (temporary) index of fragment in which hit was found', 'record_i'), '<i4'), (('ADC threshold applied in order to find hits', 'threshold'), '<f4'), (('Maximum amplitude above baseline [ADC counts]', 'height'), '<f4')], 'pulse_counts_sv': [(('Start time of the chunk', 'time'), '<i8'), (('End time of the chunk', 'endtime'), '<i8'), (('Number of pulses', 'pulse_count'), '<i8', (494,)), (('Number of lone pulses', 'lone_pulse_count'), '<i8', (494,)), (('Integral of all pulses in ADC_count x samples', 'pulse_area'), '<i8', (494,)), (('Integral of lone pulses in ADC_count x samples', 'lone_pulse_area'), '<i8', (494,)), (('Average baseline', 'baseline_mean'), '<i2', (494,)), (('Average baseline rms', 'baseline_rms_mean'), '<f4', (494,))]}
+    data_kind = {'records_sv': 'records_sv', 'veto_regions_sv': 'veto_regions_sv', 'pulse_counts_sv': 'pulse_counts_sv'}
+    
+    save_when = immutabledict(records_sv=strax.SaveWhen.TARGET, veto_regions_sv=strax.SaveWhen.TARGET, pulse_counts_sv=strax.SaveWhen.ALWAYS)
+    
+    
+    rechunk_on_save = immutabledict(records_sv= False, veto_regions_sv= True, pulse_counts_sv= True)
+    
+
+    def __init__(self):
+        super().__init__()
+        self.compute_takes_chunk_i = False
+        self.compute_takes_start_end = True
+
+    def infer_dtype(self):
+        super().infer_dtype()
+        return self.dtype
+
+    def compute(self, **kwargs):
+        
+        _kwargs = {}
+        for k,v in kwargs.items():
+            if k not in ['chunk_i', 'end', 'start']:
+                _kwargs[k.replace('_sv', '')] = v
+            else:
+                _kwargs[k] = v
+
+        result = super().compute(**_kwargs)
+
+        
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -2004,10 +1999,9 @@ class PulseProcessingHighEnergySV(straxen.PulseProcessingHighEnergy):
         result = super().compute(**_kwargs)
 
         
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -2043,10 +2037,9 @@ class PulseProcessingHighEnergySV(straxen.PulseProcessingHighEnergy):
         result = super().compute(**_kwargs)
 
         
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -2490,49 +2483,9 @@ class nVETORecorderSV(straxen.nVETORecorder):
         result = super().compute(**_kwargs)
 
         
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
-
-
-
-
-class nVETORecorderSV(straxen.nVETORecorder):
-    depends_on = ['raw_records_nv_sv']
-    provides = ['raw_records_coin_nv_sv', 'lone_raw_records_nv_sv', 'lone_raw_record_statistics_nv_sv']
-    dtype = {'raw_records_coin_nv_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Length of pulse to which the record belongs (without zero-padding)', 'pulse_length'), '<i4'), (('Fragment number in the pulse', 'record_i'), '<i2'), (('Baseline determined by the digitizer (if this is supported)', 'baseline'), '<i2'), (('Waveform data in raw ADC counts', 'data'), '<i2', (110,))], 'lone_raw_records_nv_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Length of pulse to which the record belongs (without zero-padding)', 'pulse_length'), '<i4'), (('Fragment number in the pulse', 'record_i'), '<i2'), (('Integral in ADC counts x samples', 'area'), '<i4'), (('Level of data reduction applied (strax.ReductionLevel enum)', 'reduction_level'), 'u1'), (('Baseline in ADC counts. data = int(baseline) - data_orig', 'baseline'), '<f4'), (('Baseline RMS in ADC counts. data = baseline - data_orig', 'baseline_rms'), '<f4'), (('Multiply data by 2**(this number). Baseline is unaffected.', 'amplitude_bit_shift'), '<i2'), (('Waveform data in raw counts above integer part of baseline', 'data'), '<i2', (110,))], 'lone_raw_record_statistics_nv_sv': [(('Start time of the chunk', 'time'), '<i8'), (('Endtime of the chunk', 'endtime'), '<i8'), (('Channel of the lone record', 'channel'), '<i4', (120,)), (('Total number of lone record fragments', 'nfragments'), '<i4', (120,)), (('Number of higher order lone fragments', 'nhigherfragments'), '<f8', (120,)), (('Average area per waveform in ADC_count x samples', 'lone_record_area'), '<f8', (120,)), (('Average area of higher fragment lone records in ADC_count x samples', 'higher_lone_record_area'), '<i8', (120,)), (('Baseline mean of lone records in ADC_count', 'baseline_mean'), '<f8', (120,)), (('Baseline spread of lone records in ADC_count', 'baseline_rms'), '<f8', (120,))]}
-    data_kind = {'raw_records_coin_nv_sv': 'raw_records_coin_nv_sv', 'lone_raw_records_nv_sv': 'lone_raw_records_nv_sv', 'lone_raw_record_statistics_nv_sv': 'lone_raw_record_statistics_nv_sv'}
-    
-    save_when = immutabledict(raw_records_coin_nv_sv=strax.SaveWhen.TARGET, lone_raw_records_nv_sv=strax.SaveWhen.TARGET, lone_raw_record_statistics_nv_sv=strax.SaveWhen.ALWAYS)
-    
-    
-
-    def __init__(self):
-        super().__init__()
-        self.compute_takes_chunk_i = False
-        self.compute_takes_start_end = True
-
-    def infer_dtype(self):
-        super().infer_dtype()
-        return self.dtype
-
-    def compute(self, **kwargs):
-        
-        _kwargs = {}
-        for k,v in kwargs.items():
-            if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[k.replace('_sv', '')] = v
-            else:
-                _kwargs[k] = v
-
-        result = super().compute(**_kwargs)
-
-        
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 
@@ -2568,10 +2521,47 @@ class nVETORecorderSV(straxen.nVETORecorder):
         result = super().compute(**_kwargs)
 
         
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+
+
+
+class nVETORecorderSV(straxen.nVETORecorder):
+    depends_on = ['raw_records_nv_sv']
+    provides = ['raw_records_coin_nv_sv', 'lone_raw_records_nv_sv', 'lone_raw_record_statistics_nv_sv']
+    dtype = {'raw_records_coin_nv_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Length of pulse to which the record belongs (without zero-padding)', 'pulse_length'), '<i4'), (('Fragment number in the pulse', 'record_i'), '<i2'), (('Baseline determined by the digitizer (if this is supported)', 'baseline'), '<i2'), (('Waveform data in raw ADC counts', 'data'), '<i2', (110,))], 'lone_raw_records_nv_sv': [(('Start time since unix epoch [ns]', 'time'), '<i8'), (('Length of the interval in samples', 'length'), '<i4'), (('Width of one sample [ns]', 'dt'), '<i2'), (('Channel/PMT number', 'channel'), '<i2'), (('Length of pulse to which the record belongs (without zero-padding)', 'pulse_length'), '<i4'), (('Fragment number in the pulse', 'record_i'), '<i2'), (('Integral in ADC counts x samples', 'area'), '<i4'), (('Level of data reduction applied (strax.ReductionLevel enum)', 'reduction_level'), 'u1'), (('Baseline in ADC counts. data = int(baseline) - data_orig', 'baseline'), '<f4'), (('Baseline RMS in ADC counts. data = baseline - data_orig', 'baseline_rms'), '<f4'), (('Multiply data by 2**(this number). Baseline is unaffected.', 'amplitude_bit_shift'), '<i2'), (('Waveform data in raw counts above integer part of baseline', 'data'), '<i2', (110,))], 'lone_raw_record_statistics_nv_sv': [(('Start time of the chunk', 'time'), '<i8'), (('Endtime of the chunk', 'endtime'), '<i8'), (('Channel of the lone record', 'channel'), '<i4', (120,)), (('Total number of lone record fragments', 'nfragments'), '<i4', (120,)), (('Number of higher order lone fragments', 'nhigherfragments'), '<f8', (120,)), (('Average area per waveform in ADC_count x samples', 'lone_record_area'), '<f8', (120,)), (('Average area of higher fragment lone records in ADC_count x samples', 'higher_lone_record_area'), '<i8', (120,)), (('Baseline mean of lone records in ADC_count', 'baseline_mean'), '<f8', (120,)), (('Baseline spread of lone records in ADC_count', 'baseline_rms'), '<f8', (120,))]}
+    data_kind = {'raw_records_coin_nv_sv': 'raw_records_coin_nv_sv', 'lone_raw_records_nv_sv': 'lone_raw_records_nv_sv', 'lone_raw_record_statistics_nv_sv': 'lone_raw_record_statistics_nv_sv'}
+    
+    save_when = immutabledict(raw_records_coin_nv_sv=strax.SaveWhen.TARGET, lone_raw_records_nv_sv=strax.SaveWhen.TARGET, lone_raw_record_statistics_nv_sv=strax.SaveWhen.ALWAYS)
+    
+    
+
+    def __init__(self):
+        super().__init__()
+        self.compute_takes_chunk_i = False
+        self.compute_takes_start_end = True
+
+    def infer_dtype(self):
+        super().infer_dtype()
+        return self.dtype
+
+    def compute(self, **kwargs):
+        
+        _kwargs = {}
+        for k,v in kwargs.items():
+            if k not in ['chunk_i', 'end', 'start']:
+                _kwargs[k.replace('_sv', '')] = v
+            else:
+                _kwargs[k] = v
+
+        result = super().compute(**_kwargs)
+
+        
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 
 
 

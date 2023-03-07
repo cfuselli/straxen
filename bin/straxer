@@ -118,6 +118,10 @@ def parse_args():
         '--print_alive',
         default=300,
         help='Print that straxer is still running every this many [seconds]')
+    parser.add_argument(
+        '--software_veto', default=False,
+        help="Class name of veto plugin to apply (i.e.: RadialVeto). It's overwritten by rundoc value.")
+
     return parser.parse_args()
 
 
@@ -142,6 +146,14 @@ def setup_context(args):
 
     if args.diagnose_sorting:
         st.set_config(dict(diagnose_sorting=True))
+
+    if args.software_veto:
+        import straxen.plugins.raw_records_sv.software_veto as software_veto
+        veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, args.software_veto)
+        st.register(veto_plugin)
+
+        import straxen.plugins.raw_records_sv._software_veto_copies as _software_veto_copies
+        st.register_all(_software_veto_copies)
 
     st.context_config['allow_multiprocess'] = args.multiprocess
     st.context_config['allow_shm'] = args.shm

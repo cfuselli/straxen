@@ -1699,10 +1699,6 @@ def software_veto_get_name(args, rundoc=None):
     
     return plugin_name
     
-
-
-
-
 def software_veto_register_raw_records(st, args, rundoc=None):
     """Based on the selection that we want to apply, 
     register the correct veto plugin.
@@ -1716,71 +1712,6 @@ def software_veto_register_raw_records(st, args, rundoc=None):
     import straxen.plugins.raw_records_sv.software_veto as software_veto
     veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, veto_name)
     st.register(veto_plugin)
-
-
-
-# software_veto_plugin_classes = []
-
-# def software_veto_register_fly(st, run_id):
-#     """We make a copy of every original plugin
-#     for the software veto adding a _sv to the provides.
-#     Computation is tricky because requires initialisation
-#     of plugin to copy. Also requires no hardcoded data_types
-#     in plugins (see https://github.com/cfuselli/straxen/pull/3)
-#     """
-    
-#     registry = st._plugin_class_registry.copy().items()
-
-#     _plugins = []
-#     for name, pl in registry:
-#         if pl == straxen.DAQReader:
-#             pass
-#         elif pl == straxen.Fake1TDAQReader:
-#             pass
-#         elif pl == straxen.plugins.raw_records_sv.software_veto.RadialVeto:
-#             pass
-#         elif name.endswith('_sv'): # ext_timings_nv_sv_sv ?? 
-#             pass
-#         elif pl in _plugins:
-#             pass
-#         else:
-            
-#             # I need initialisation to save myself
-#             init_pl = st.get_single_plugin(run_id, name)
-            
-#             new_plugin_class = type(name+'_sv', (pl,), {})
-            
-#             new_plugin_class.__module__ = None
-
-#             new_plugin_class.provides   = [prov.replace('_sv','')+'_sv' for prov in strax.to_str_tuple(pl.provides)]
-#             new_plugin_class.depends_on = [deps.replace('_sv','')+'_sv' for deps in strax.to_str_tuple(pl.depends_on)]
-
-#             if isinstance(init_pl.data_kind, dict):
-#                 new_plugin_class.data_kind = {t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in init_pl.data_kind}
-#             else:
-#                 new_plugin_class.data_kind = init_pl.data_kind+'_sv'
-
-#             if isinstance(pl.save_when, immutabledict):
-#                 new_plugin_class.save_when = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.save_when})
-
-#             if isinstance(pl.rechunk_on_save, immutabledict):
-#                 new_plugin_class.rechunk_on_save = immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.rechunk_on_save})
-
-#             if init_pl.multi_output:
-#                 new_plugin_class.dtype = {prov+'_sv': init_pl.dtype_for(prov) for prov in pl.provides}
-#             else:
-#                 new_plugin_class.dtype = init_pl.dtype_for(name)
-                
-#             def new_infer_dtype(self):
-#                 return self.dtype
-
-#             new_plugin_class.infer_dtype = new_infer_dtype
-
-
-#             software_veto_plugin_classes.append(new_plugin_class)
-
-#         _plugins.append(pl)
-
 
 
 

@@ -1,7 +1,9 @@
+import sys, os
+sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
+
 import strax
 import straxen
 from immutabledict import immutabledict
-import sys, os
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 print(_dir)
@@ -100,10 +102,9 @@ for name, pl in registry:
 
         if init_pl.multi_output:
             output = """
-
-        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        p_mapping = {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}
+        return {p_mapping[k]: v for k,v in result.items()}
 """
         else:
             output = """
