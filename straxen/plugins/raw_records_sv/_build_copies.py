@@ -1,10 +1,5 @@
-import sys
-sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
-
-
 import strax
 import straxen
-from straxen.plugins.raw_records_sv import software_veto
 from immutabledict import immutabledict
 import sys, os
 
@@ -54,8 +49,6 @@ for name, pl in registry:
     if pl == straxen.DAQReader:
         pass
     elif pl == straxen.Fake1TDAQReader:
-        pass
-    elif pl.__base__ == straxen.plugins.raw_records_sv._software_veto_base.RawRecordsSoftwareVetoBase:
         pass
     elif name.endswith('_sv'): # ext_timings_nv_sv_sv ?? 
         pass
