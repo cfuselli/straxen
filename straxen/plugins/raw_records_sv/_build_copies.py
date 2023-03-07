@@ -41,7 +41,7 @@ tofile = """
 from immutabledict import immutabledict
 import numba
 import numpy as np
-
+import inspect
 import strax
 import straxen
 
@@ -105,6 +105,20 @@ for name, pl in registry:
         compute_takes_chunk_i   = init_pl.compute_takes_chunk_i
         compute_takes_start_end =  init_pl.compute_takes_start_end
 
+        if init_pl.multi_output:
+            output = """
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+"""
+        else:
+            output = """
+        return result
+"""
+        
+
+
 
         
         classtofile = f"""
@@ -123,32 +137,21 @@ class {pl.__name__}SV(straxen.{pl.__name__}):
         self.compute_takes_start_end = {compute_takes_start_end}
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {{k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}}
-    
-    @property
-    def prov_mapping(self):
-        return {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {{}}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {{p_mapping[k]: v for k,v in result.items()}}
+        {output}
 
 """
 

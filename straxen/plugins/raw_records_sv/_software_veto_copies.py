@@ -2,7 +2,7 @@
 from immutabledict import immutabledict
 import numba
 import numpy as np
-
+import inspect
 import strax
 import straxen
 
@@ -22,32 +22,23 @@ class AqmonHitsSV(straxen.AqmonHits):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -65,32 +56,23 @@ class BayesPeakClassificationSV(straxen.BayesPeakClassification):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -108,32 +90,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -151,32 +124,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -194,32 +158,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -237,32 +192,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -280,32 +226,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -323,32 +260,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -366,32 +294,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -409,32 +328,23 @@ class CorrectedAreasSV(straxen.CorrectedAreas):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -452,32 +362,23 @@ class DetectorSynchronizationSV(straxen.DetectorSynchronization):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -495,32 +396,23 @@ class DistinctChannelsSV(straxen.DistinctChannels):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -538,32 +430,23 @@ class EnergyEstimatesSV(straxen.EnergyEstimates):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -581,32 +464,23 @@ class EventAmbienceSV(straxen.EventAmbience):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -624,32 +498,23 @@ class EventAreaPerChannelSV(straxen.EventAreaPerChannel):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -667,32 +532,23 @@ class EventBasicsSV(straxen.EventBasics):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -710,32 +566,23 @@ class EventInfoSV(straxen.EventInfo):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -753,32 +600,23 @@ class EventInfoDoubleSV(straxen.EventInfoDouble):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -796,32 +634,23 @@ class EventPatternFitSV(straxen.EventPatternFit):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -839,32 +668,23 @@ class EventPositionsSV(straxen.EventPositions):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -882,32 +702,23 @@ class EventS2PositionCNNSV(straxen.EventS2PositionCNN):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -925,32 +736,23 @@ class EventS2PositionGCNSV(straxen.EventS2PositionGCN):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -968,32 +770,23 @@ class EventS2PositionMLPSV(straxen.EventS2PositionMLP):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1011,32 +804,23 @@ class EventShadowSV(straxen.EventShadow):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1054,32 +838,23 @@ class EventTopBottomParamsSV(straxen.EventTopBottomParams):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1097,32 +872,23 @@ class EventsSV(straxen.Events):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1140,32 +906,23 @@ class EventwBayesClassSV(straxen.EventwBayesClass):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1183,32 +940,23 @@ class EventwBayesClassSV(straxen.EventwBayesClass):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1226,32 +974,23 @@ class IndividualPeakMonitorSV(straxen.IndividualPeakMonitor):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1269,32 +1008,23 @@ class LEDAfterpulseProcessingSV(straxen.LEDAfterpulseProcessing):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1312,32 +1042,23 @@ class LEDCalibrationSV(straxen.LEDCalibration):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1355,32 +1076,23 @@ class LocalMinimumInfoSV(straxen.LocalMinimumInfo):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1398,32 +1110,23 @@ class MergedS2sSV(straxen.MergedS2s):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1441,32 +1144,23 @@ class MergedS2sHighEnergySV(straxen.MergedS2sHighEnergy):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1484,32 +1178,23 @@ class OnlineMonitorMVSV(straxen.OnlineMonitorMV):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1527,32 +1212,23 @@ class OnlineMonitorNVSV(straxen.OnlineMonitorNV):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1570,32 +1246,23 @@ class OnlinePeakMonitorSV(straxen.OnlinePeakMonitor):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1613,32 +1280,23 @@ class PeakAmbienceSV(straxen.PeakAmbience):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1656,32 +1314,23 @@ class PeakBasicsSV(straxen.PeakBasics):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1699,32 +1348,23 @@ class PeakBasicsHighEnergySV(straxen.PeakBasicsHighEnergy):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1742,32 +1382,23 @@ class PeakPositionsCNNSV(straxen.PeakPositionsCNN):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1785,32 +1416,23 @@ class PeakPositionsGCNSV(straxen.PeakPositionsGCN):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1828,32 +1450,23 @@ class PeakPositionsMLPSV(straxen.PeakPositionsMLP):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1871,32 +1484,23 @@ class PeakPositionsNTSV(straxen.PeakPositionsNT):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1914,32 +1518,23 @@ class PeakProximitySV(straxen.PeakProximity):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -1957,32 +1552,23 @@ class PeakShadowSV(straxen.PeakShadow):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2000,32 +1586,23 @@ class PeakTopBottomParamsSV(straxen.PeakTopBottomParams):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2043,32 +1620,23 @@ class PeakletClassificationSV(straxen.PeakletClassification):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2086,32 +1654,23 @@ class PeakletClassificationHighEnergySV(straxen.PeakletClassificationHighEnergy)
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2129,32 +1688,26 @@ class PeakletsSV(straxen.Peaklets):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2172,32 +1725,26 @@ class PeakletsSV(straxen.Peaklets):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2215,32 +1762,23 @@ class PeakletsHighEnergySV(straxen.PeakletsHighEnergy):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2258,32 +1796,23 @@ class PeaksSV(straxen.Peaks):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2301,32 +1830,23 @@ class PeaksHighEnergySV(straxen.PeaksHighEnergy):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2348,32 +1868,26 @@ class PulseProcessingSV(straxen.PulseProcessing):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2395,32 +1909,26 @@ class PulseProcessingSV(straxen.PulseProcessing):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2442,32 +1950,26 @@ class PulseProcessingSV(straxen.PulseProcessing):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2487,32 +1989,26 @@ class PulseProcessingHighEnergySV(straxen.PulseProcessingHighEnergy):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2532,32 +2028,26 @@ class PulseProcessingHighEnergySV(straxen.PulseProcessingHighEnergy):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -2575,32 +2065,23 @@ class S2ReconPosDiffSV(straxen.S2ReconPosDiff):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2618,32 +2099,23 @@ class VetoIntervalsSV(straxen.VetoIntervals):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2661,32 +2133,23 @@ class VetoProximitySV(straxen.VetoProximity):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2704,32 +2167,23 @@ class mVETOEventSyncSV(straxen.mVETOEventSync):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2747,32 +2201,23 @@ class muVETOEventsSV(straxen.muVETOEvents):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2790,32 +2235,23 @@ class muVETOHitletsSV(straxen.muVETOHitlets):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2833,32 +2269,23 @@ class muVETOPulseProcessingSV(straxen.muVETOPulseProcessing):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2876,32 +2303,23 @@ class nVETOEventPositionsSV(straxen.nVETOEventPositions):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2919,32 +2337,23 @@ class nVETOEventsSV(straxen.nVETOEvents):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -2962,32 +2371,23 @@ class nVETOEventsSyncSV(straxen.nVETOEventsSync):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -3005,32 +2405,23 @@ class nVETOHitletsSV(straxen.nVETOHitlets):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -3048,32 +2439,23 @@ class nVETOPulseProcessingSV(straxen.nVETOPulseProcessing):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
 
 
@@ -3093,32 +2475,26 @@ class nVETORecorderSV(straxen.nVETORecorder):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -3138,32 +2514,26 @@ class nVETORecorderSV(straxen.nVETORecorder):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -3183,32 +2553,26 @@ class nVETORecorderSV(straxen.nVETORecorder):
         self.compute_takes_start_end = True
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+
+        p_mapping = {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 
 
 
@@ -3226,30 +2590,21 @@ class nVetoExtTimingsSV(straxen.nVetoExtTimings):
         self.compute_takes_start_end = False
 
     def infer_dtype(self):
+        super().infer_dtype()
         return self.dtype
 
-    @property
-    def dep_mapping(self):
-        return {k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
-                                        strax.to_str_tuple(super().depends_on))}
-    
-    @property
-    def prov_mapping(self):
-        return {v: k for k, v in zip(strax.to_str_tuple(self.provides), 
-                                        strax.to_str_tuple(super().provides))}
-    
     def compute(self, **kwargs):
-        mapping = self.dep_mapping
-        p_mapping = self.prov_mapping
         
         _kwargs = {}
         for k,v in kwargs.items():
             if k not in ['chunk_i', 'end', 'start']:
-                _kwargs[mapping[k]] = v
+                _kwargs[k.replace('_sv', '')] = v
             else:
                 _kwargs[k] = v
 
         result = super().compute(**_kwargs)
 
-        return {p_mapping[k]: v for k,v in result.items()}
+        
+        return result
+
 
