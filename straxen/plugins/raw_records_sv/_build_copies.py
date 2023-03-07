@@ -79,21 +79,31 @@ for name, pl in registry:
         if isinstance(pl.save_when, immutabledict):
             save_when = str(immutabledict({t.replace('_sv','')+'_sv':init_pl.save_when[t] for t in pl.save_when}))
             for k, v in save_when_replacers.items():
-                save_when = save_when.replace(k, v)           
+                save_when = save_when.replace(k, v)
+            save_when = f"""
+    save_when = {save_when}
+    """
+        else:
+            save_when = ''
     
         if isinstance(pl.rechunk_on_save, immutabledict):
             rechunk_on_save = str(immutabledict({t.replace('_sv','')+'_sv':init_pl.rechunk_on_save[t] for t in pl.rechunk_on_save}))
             for k, v in rechunk_replacers.items():
                 rechunk_on_save = rechunk_on_save.replace(k, v)
-                
+            rechunk_on_save = f"""
+    rechunk_on_save = {rechunk_on_save}
+    """
+        else:
+            rechunk_on_save = ''
+        
         if init_pl.multi_output:
             dtype = str({prov+'_sv': init_pl.dtype_for(prov) for prov in pl.provides})
             dtype = dtype.replace('dtype(', '').replace(')])', ')]')
         else:
             dtype = init_pl.dtype_for(name)
-            
-        def new_infer_dtype(self):
-            return self.dtype
+
+        compute_takes_chunk_i   = init_pl.compute_takes_chunk_i
+        compute_takes_start_end =  init_pl.compute_takes_start_end
 
 
         
@@ -104,21 +114,42 @@ class {pl.__name__}SV(straxen.{pl.__name__}):
     provides = {provides}
     dtype = {dtype}
     data_kind = {data_kind}
+    {save_when}
+    {rechunk_on_save}
+
+    def __init__(self):
+        super().__init__()
+        self.compute_takes_chunk_i = {compute_takes_chunk_i}
+        self.compute_takes_start_end = {compute_takes_start_end}
 
     def infer_dtype(self):
         return self.dtype
 
-"""
-        tofile += classtofile
-        
-        if isinstance(pl.save_when, immutabledict):
-            tofile += f"""
-    save_when = {save_when}
-"""
+    @property
+    def dep_mapping(self):
+        return {{k: v for k, v in zip(strax.to_str_tuple(self.depends_on), 
+                                        strax.to_str_tuple(super().depends_on))}}
     
-        if isinstance(pl.rechunk_on_save, immutabledict):
-            tofile += f"""
-    rechunk_on_save = {rechunk_on_save}
+    @property
+    def prov_mapping(self):
+        return {{v: k for k, v in zip(strax.to_str_tuple(self.provides), 
+                                        strax.to_str_tuple(super().provides))}}
+    
+    def compute(self, **kwargs):
+        mapping = self.dep_mapping
+        p_mapping = self.prov_mapping
+        
+        _kwargs = {{}}
+        for k,v in kwargs.items():
+            if k not in ['chunk_i', 'end', 'start']:
+                _kwargs[mapping[k]] = v
+            else:
+                _kwargs[k] = v
+
+        result = super().compute(**_kwargs)
+
+        return {{p_mapping[k]: v for k,v in result.items()}}
+
 """
 
     _plugins.append(pl)

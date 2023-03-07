@@ -1400,7 +1400,7 @@ def process_run(rd, send_heartbeats=args.production):
         run_strax_config.update(infer_mode(rd))
         run_strax_config['debug'] = args.debug
 
-        log.info(f"We'll try to process the run with pathos + dill")
+        log.info(f"We'll try to process the run with multiprocess instead of multiprocessing  (so we use dill)")
         strax_proc = multiprocess.Process(
             target=run_strax,
             kwargs=run_strax_config)
