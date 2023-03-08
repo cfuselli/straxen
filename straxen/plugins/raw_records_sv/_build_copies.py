@@ -149,7 +149,16 @@ class {pl.__name__}SV(straxen.{pl.__name__}):
 
 """
 
+        if pl == straxen.PulseProcessing:
+            classtofile += """
+    allow_sloppy_chunking = True
+"""
+
         tofile += classtofile
+
+
+
+
     _plugins.append(pl)
 
 

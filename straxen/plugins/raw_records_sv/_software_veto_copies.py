@@ -1551,6 +1551,7 @@ class PulseProcessingSV(straxen.PulseProcessing):
     
     rechunk_on_save = immutabledict(records_sv= False, veto_regions_sv= True, pulse_counts_sv= True)
     
+    allow_sloppy_chunking = True
 
     def __init__(self):
         super().__init__()
