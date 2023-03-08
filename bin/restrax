@@ -57,6 +57,8 @@ def parse_args():
                         help='Only bother with doing the recompression if there are more than this many chunks')
     parser.add_argument('--bypass_mode', action='store_true',
                         help='Stop recompression and just rename folders. Use with care!')
+    parser.add_argument('--test_software_veto', action='store_true',
+                        help='Test software veto overwriting info from rundoc')
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument('--undying', action='store_true',
                          help="Except any error and ignore it")
@@ -234,8 +236,10 @@ class ReStrax(daq_core.DataBases):
         data_docs = []
         for folder in folders:
             if os.path.exists(os.path.join(self.write_to, folder)):
-                # Don't do work twice
-                continue
+                self.log.info(f'Data exists, removing {os.path.join(self.write_to, folder)} to do it again')
+                # We are testing, delete everything and do it again
+                shutil.rmtree(os.path.join(self.write_to, folder))
+
             if len(split := folder.split('-')) and len(split[0]) == 6:
                 run_id, data_type, lineage = split
 
@@ -427,8 +431,9 @@ class ReStrax(daq_core.DataBases):
     def software_veto_is_on(self, run_doc: dict):
         """Get if software veto is on from the rundoc"""
 
-        # TODO now true carlo testing
-        return True
+        if args.test_software_veto and not args.production:
+
+                return True
 
     def software_veto_docs(self, data_docs: ty.List[dict]) -> (ty.List[dict], ty.List[dict], ty.List[dict]):
         """Replace the entire docs with only the docs of software veto data"""
@@ -437,10 +442,17 @@ class ReStrax(daq_core.DataBases):
         # or just make it _software_veto instead of _sv? 
         # AND put the suffix somewhere common not hardcoded everywhere
 
-        #TODO if no counterpart, keep also that
-        consider_sv_docs = [d for d in data_docs if     d['type'].endswith('_sv')]
-        no_sv_version_docs = #TODO
-        original_docs = #TODO [d for d in data_docs if not d['type'].endswith('_sv')]
+        #TODO find better variable names here
+        consider_sv_docs = [d for d in data_docs if d['type'].endswith('_sv')]
+        all_original_docs = [d for d in data_docs if not d['type'].endswith('_sv')]
+
+        consider_sv_docs_types = [d['type'][:-3] for d in consider_sv_docs]
+        all_original_docs_types = [d['type'] for d in all_original_docs]
+        
+        no_sv_version_types = [t for t in original_docs_types if t not in consider_sv_docs_types]
+
+        original_docs = [d for d in all_original_docs if d['type'] not in no_sv_version_types]
+        no_sv_version_docs = [d for d in all_original_docs if d['type'] in no_sv_version_types]
 
         return (consider_sv_docs, original_docs, no_sv_version_docs)
 
@@ -452,13 +464,16 @@ class ReStrax(daq_core.DataBases):
         We need to update the
         """
 
+        # TODO style of this function is terrible
         for d in data_docs:
 
             type_in = d['type']
             type_orig = d['type'].replace('_sv', '')
 
             # TODO check if they are more than one
-            d_orig = [d for d in original_docs if d['type'] == type_orig][0]
+            d_orig = [d for d in original_docs if d['type'] == type_orig]
+            assert len(d_orig) == 1, " two copies of the same data?! "
+            d_orig = d_orig[0]
 
             lineage_in = d['meta']['lineage_hash']
             lineage_orig = d_orig['meta']['lineage_hash']
@@ -466,7 +481,6 @@ class ReStrax(daq_core.DataBases):
             dir_in = d['location']
             dir_orig = d_orig['location']
             dir_out = self.renamed_path(dir_in)
-
 
             split = dir_out.split('-')
             dir_out_hack = '-'.join(split[:-1]) + '-' + lineage_orig
@@ -482,7 +496,6 @@ class ReStrax(daq_core.DataBases):
             md_out['software_veto_lineage'] = md_out['lineage']
             
             # Change filenames in chunk info 
-            # TODO get correct number of chunks
             for i_chunk in range(len(md_out['chunks'])):
 
                 chunk_name = md_out['chunks'][i_chunk]['filename']
@@ -501,17 +514,18 @@ class ReStrax(daq_core.DataBases):
             with open(os.path.join(dir_out, new_md_json_name), mode='w') as f:
                 f.write(json.dumps(md_out, **json_options))
 
-            # TODO remove the old metadata file
+            # remove the old metadata file
             old_md_json_name = '-'.join([type_in, lineage_in, 'metadata.json'])
             os.remove(os.path.join(dir_out, old_md_json_name))
             
-            # TODO remove originals from rundb
-            # find example in ajax
+            # remove originals from rundb
             self._delete_data_from_rundb(run_doc, original_docs)
+
+
 
     def _delete_data_from_rundb(self, run_doc, data_docs, reason='Software veto applied'):
         """
-        Delete data and update the rundoc
+        Delete data and update the rundoc. Used for software veto. 
         :param run_doc: rundoc
         :param data_docs: docs of data to be deleted
         """
@@ -840,10 +854,12 @@ class ReStrax(daq_core.DataBases):
         self.log.info('Rundoc updated')
 
     def remove_old_docs(self, done_data_docs: ty.List[dict]):
-        for data_doc in done_data_docs:
-            loc = data_doc.get('location', '??')
-            assert 'pre_processed' in loc
-            self._remove_dir(loc)
+        """Remove old docs only if in production mode"""
+        if args.production:
+            for data_doc in done_data_docs:
+                loc = data_doc.get('location', '??')
+                assert 'pre_processed' in loc
+                self._remove_dir(loc)
 
     def take_a_nap(self, dt: ty.Optional[int] = None):
         time.sleep(dt if dt is not None else self.nap_time)
@@ -870,6 +886,9 @@ class ReStrax(daq_core.DataBases):
         self.log.info(f'Move {source} -> {dest}')
         if self.production:
             os.rename(source, dest)
+        else:
+            # if we are testing just copy the files
+            shutil.copytree(source, dest, dirs_exist_ok=True)
 
     def _remove_dir(self, directory: str) -> None:
         """Remove directory (when in production mode)"""
