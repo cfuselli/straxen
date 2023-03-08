@@ -33,6 +33,7 @@ import typing as ty
 from straxen import daq_core
 from memory_profiler import memory_usage
 import glob
+import json
 from ast import literal_eval
 from straxen.daq_core import now
 
@@ -186,6 +187,7 @@ class ReStrax(daq_core.DataBases):
         self.recompress_min_chunks = args.recompress_min_chunks
         self.bypass_mode = args.bypass_mode
         self.overwrite_settings()
+        self.test_software_veto = args.test_software_veto
 
     def infinite_loop(self, close=False) -> None:
         """Core of restrax, recompress the data followed by several validation steps"""
@@ -251,7 +253,7 @@ class ReStrax(daq_core.DataBases):
                 data_docs.append({'host': self.hostname,
                                   'location': os.path.join(self.read_from, folder),
                                   'type': data_type,
-                                  'linage_hash': lineage,
+                                  'meta': {'lineage_hash': lineage},
                                   })
         if not len(data_docs):
             return None
@@ -393,12 +395,14 @@ class ReStrax(daq_core.DataBases):
 
         if software_veto_is_on:
             self.log.info(f'Software veto is on, now hacking metadata, dirnames and rundoc and rundb')
-            data_docs = self.software_veto_hack_copies_to_originals(run_doc, data_docs)
-
+            data_docs = self.software_veto_hack_copies_to_originals(run_doc, data_docs, original_docs)
+            
             # Move doc if we didn't find its software veto twin            
             for move_doc in no_sv_version_docs:
                 self.log.debug(f"Moving doc {move_doc['type']} because no SV copy was found")
                 self._bypass_for_data_doc(move_doc)
+            
+            self._delete_data_from_rundb(run_doc, original_docs)
 
         self.finalize_execute(data_docs)
 
@@ -431,9 +435,10 @@ class ReStrax(daq_core.DataBases):
     def software_veto_is_on(self, run_doc: dict):
         """Get if software veto is on from the rundoc"""
 
-        if args.test_software_veto and not args.production:
+        if self.test_software_veto and not self.production:
 
-                return True
+            return True
+        
 
     def software_veto_docs(self, data_docs: ty.List[dict]) -> (ty.List[dict], ty.List[dict], ty.List[dict]):
         """Replace the entire docs with only the docs of software veto data"""
@@ -449,7 +454,7 @@ class ReStrax(daq_core.DataBases):
         consider_sv_docs_types = [d['type'][:-3] for d in consider_sv_docs]
         all_original_docs_types = [d['type'] for d in all_original_docs]
         
-        no_sv_version_types = [t for t in original_docs_types if t not in consider_sv_docs_types]
+        no_sv_version_types = [t for t in all_original_docs_types if t not in consider_sv_docs_types]
 
         original_docs = [d for d in all_original_docs if d['type'] not in no_sv_version_types]
         no_sv_version_docs = [d for d in all_original_docs if d['type'] in no_sv_version_types]
@@ -476,21 +481,24 @@ class ReStrax(daq_core.DataBases):
             d_orig = d_orig[0]
 
             lineage_in = d['meta']['lineage_hash']
+            self.log.debug(f'carlo print d_orig {d_orig}')
             lineage_orig = d_orig['meta']['lineage_hash']
 
             dir_in = d['location']
             dir_orig = d_orig['location']
             dir_out = self.renamed_path(dir_in)
 
-            split = dir_out.split('-')
-            dir_out_hack = '-'.join(split[:-1]) + '-' + lineage_orig
-            os.rename(dir_out, dir_out_hack)
-            dir_out = dir_out_hack
-
             backend = strax.FileSytemBackend()
             md_orig = backend.get_metadata(dir_orig)
             md_in = backend.get_metadata(dir_in)
             md_out = backend.get_metadata(dir_out)
+
+            split = dir_out.split('-')
+            split[-2] = split[-2].replace('_sv', '')
+            dir_out_hack = '-'.join(split[:-1]) + '-' + lineage_orig
+            
+            os.rename(dir_out, dir_out_hack)
+            dir_out = dir_out_hack
 
             # Keep track of plugins used for veto
             md_out['software_veto_lineage'] = md_out['lineage']
@@ -499,10 +507,11 @@ class ReStrax(daq_core.DataBases):
             for i_chunk in range(len(md_out['chunks'])):
 
                 chunk_name = md_out['chunks'][i_chunk]['filename']
-                run_id, lineage, chunk_number = chunk_name.split('-')
-                new_chunk_name = '-'.join([run_id, lineage_orig, chunk_number])
+                data_type, lineage, chunk_number = chunk_name.split('-')
+                data_type = data_type.replace('_sv', '')
+                new_chunk_name = '-'.join([data_type, lineage_orig, chunk_number])
                 md_out['chunks'][i_chunk]['filename'] = new_chunk_name
-                os.rename(chunk_name, new_chunk_name)
+                os.rename(os.path.join(dir_out, chunk_name), os.path.join(dir_out, new_chunk_name))
 
             # Change lineage, kind and type to original raw_records 
             for key in ['data_kind', 'data_type', 'lineage', 'lineage_hash']:
@@ -519,7 +528,6 @@ class ReStrax(daq_core.DataBases):
             os.remove(os.path.join(dir_out, old_md_json_name))
             
             # remove originals from rundb
-            self._delete_data_from_rundb(run_doc, original_docs)
 
 
 
@@ -534,20 +542,20 @@ class ReStrax(daq_core.DataBases):
 
         self.log.info('Deleting original data from rundb')
         for ddoc in data_docs:
-            self.log.info(f'Deleting {ddoc['location']}')
+            self.log.info(f"Deleting {ddoc['location']}")
             for k in ddoc.copy().keys():
                 if k in ['location', 'meta', 'protocol']:
                     ddoc.pop(k)
 
             ddoc.update({'at': now(), 'by': f'restrax.{self.hostname}', 'reason': reason})
-            if args.production:
+            if self.production:
                 run_coll.update_one({'_id': run_doc['_id']},
                                     {"$addToSet": {'deleted_data': ddoc},
                                     "$pull": {"data":
                                                 {"type": run_doc['type'],
                                                     "host": {'$in': ['daq', self.hostname]}}}})
             else:
-                log.info(f'Update ddoc with : {ddoc}')
+                self.log.info(f'Would update ddoc. But we are testing, so no db stuff!')
         
 
     def rechunk_docs(self, run_doc: dict, data_docs: ty.List[dict]) -> None:
@@ -855,7 +863,7 @@ class ReStrax(daq_core.DataBases):
 
     def remove_old_docs(self, done_data_docs: ty.List[dict]):
         """Remove old docs only if in production mode"""
-        if args.production:
+        if self.production:
             for data_doc in done_data_docs:
                 loc = data_doc.get('location', '??')
                 assert 'pre_processed' in loc
