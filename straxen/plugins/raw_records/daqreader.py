@@ -15,7 +15,7 @@ __all__ += ['SOFTWARE_VETO_CHANNEL']
 # Just below the TPC acquisition monitor, see
 # https://xe1t-wiki.lngs.infn.it/doku.php?id=xenon:xenonnt:dsg:daq:channel_groups
 ARTIFICIAL_DEADTIME_CHANNEL = 799
-SOFTWARE_VETO_CHANNEL = 798
+SOFTWARE_VETO_CHANNEL = 797
 
 
 class ArtificialDeadtimeInserted(UserWarning):
