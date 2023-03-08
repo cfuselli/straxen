@@ -443,23 +443,15 @@ class ReStrax(daq_core.DataBases):
     def software_veto_docs(self, data_docs: ty.List[dict]) -> (ty.List[dict], ty.List[dict], ty.List[dict]):
         """Replace the entire docs with only the docs of software veto data"""
 
-        #TODO find better way to define software veto docs?
-        # or just make it _software_veto instead of _sv? 
-        # AND put the suffix somewhere common not hardcoded everywhere
+        #TODO put the suffix _sv somewhere common not hardcoded everywhere
+        def _filter_docs(ts, docs):
+            return [d for d in docs if d['type'] in ts]
 
-        #TODO find better variable names here
-        consider_sv_docs = [d for d in data_docs if d['type'].endswith('_sv')]
-        all_original_docs = [d for d in data_docs if not d['type'].endswith('_sv')]
-
-        consider_sv_docs_types = [d['type'][:-3] for d in consider_sv_docs]
-        all_original_docs_types = [d['type'] for d in all_original_docs]
-        
-        no_sv_version_types = [t for t in all_original_docs_types if t not in consider_sv_docs_types]
-
-        original_docs = [d for d in all_original_docs if d['type'] not in no_sv_version_types]
-        no_sv_version_docs = [d for d in all_original_docs if d['type'] in no_sv_version_types]
-
-        return (consider_sv_docs, original_docs, no_sv_version_docs)
+        all_targets = set([d['type'] for d in docs])
+        no_sv = {t for t in all_targets if f'{t}_sv' not in all_targets}
+        sv = {t for t in all_targets if t.endswith('_sv')}
+        originals = all_targets - sv - no_sv
+        return _filter_docs(docs, sv), _filter_docs(docs, originals), _filter_docs(docs, no_sv)
 
 
     def software_veto_hack_copies_to_originals(self, run_doc: dict, data_docs: ty.List[dict], original_docs: ty.List[dict]) -> ty.List[dict]: 
@@ -862,12 +854,11 @@ class ReStrax(daq_core.DataBases):
         self.log.info('Rundoc updated')
 
     def remove_old_docs(self, done_data_docs: ty.List[dict]):
-        """Remove old docs only if in production mode"""
-        if self.production:
-            for data_doc in done_data_docs:
-                loc = data_doc.get('location', '??')
-                assert 'pre_processed' in loc
-                self._remove_dir(loc)
+        """Remove old docs, only if in production mode"""
+        for data_doc in done_data_docs:
+            loc = data_doc.get('location', '??')
+            assert 'pre_processed' in loc
+            self._remove_dir(loc)
 
     def take_a_nap(self, dt: ty.Optional[int] = None):
         time.sleep(dt if dt is not None else self.nap_time)
@@ -900,7 +891,7 @@ class ReStrax(daq_core.DataBases):
 
     def _remove_dir(self, directory: str) -> None:
         """Remove directory (when in production mode)"""
-        self.log.info(f'Remove {directory}')
+        self.log.info(f'Remove {directory} (not if testing)')
         if self.production:
             shutil.rmtree(directory)
 
