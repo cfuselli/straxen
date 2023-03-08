@@ -13,7 +13,6 @@ import sys
 
 sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Process a single run with straxen',
@@ -139,6 +138,14 @@ def setup_context(args):
         logging.info(f'set context kwargs {args.context_kwargs}')
         st = getattr(context_module, args.context)(**args.context_kwargs)
 
+    if args.software_veto is not False:
+        import straxen.plugins.raw_records_sv.software_veto as software_veto
+        veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, args.software_veto)
+        st.register(veto_plugin)
+
+        import straxen.plugins.raw_records_sv._software_veto_copies as _software_veto_copies
+        st.register_all(_software_veto_copies)
+    
     if args.config_kwargs:
         logging.info(f'set context options to {args.config_kwargs}')
         st.set_config(to_dict_tuple(args.config_kwargs))
@@ -148,14 +155,6 @@ def setup_context(args):
 
     if args.diagnose_sorting:
         st.set_config(dict(diagnose_sorting=True))
-
-    if args.software_veto:
-        import straxen.plugins.raw_records_sv.software_veto as software_veto
-        veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, args.software_veto)
-        st.register(veto_plugin)
-
-        import straxen.plugins.raw_records_sv._software_veto_copies as _software_veto_copies
-        st.register_all(_software_veto_copies)
 
     st.context_config['allow_multiprocess'] = args.multiprocess
     st.context_config['allow_shm'] = args.shm
@@ -228,7 +227,8 @@ def main(args):
 
     # Reactivate after https://github.com/XENONnT/straxen/issues/586
     logging.info(f'Checking availabilty')
-    logging.info(f'Available\n{str(st.available_for_run(args.run_id))}')
+    # Deactivate temporarily for software_veto
+    # logging.info(f'Available\n{str(st.available_for_run(args.run_id))}')
 
     logging.info('Infer start/end')
     try:

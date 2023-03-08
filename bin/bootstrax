@@ -115,8 +115,8 @@ args = parser.parse_args()
 
 # The folder that can be used for testing bootstrax (i.e. non production
 # mode). It will be written to:
-test_data_folder = ('/data/test_processed/' if
-                    os.path.exists('/data/test_processed/')
+test_data_folder = ('/data/test_pre_processed/' if
+                    os.path.exists('/data/test_pre_processed/')
                     else './bootstrax/')
 
 # Timeouts in seconds
@@ -1210,8 +1210,6 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
 
         if software_veto_is_on(args):
         
-            software_veto_register_raw_records(st, args)
-            # software_veto_register_fly(st, run_id)
 
             _post_processing = list(post_processing)
             for t in targets:
@@ -1241,6 +1239,9 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                     max_workers=cores)
 
             if software_veto_is_on(args):
+                
+                software_veto_register_raw_records(st, args)
+
                 import straxen.plugins.raw_records_sv._software_veto_copies as _software_veto_copies
                 st.register_all(_software_veto_copies)
 
