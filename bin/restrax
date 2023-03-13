@@ -60,6 +60,9 @@ def parse_args():
                         help='Stop recompression and just rename folders. Use with care!')
     parser.add_argument('--test_software_veto', action='store_true',
                         help='Test software veto overwriting info from rundoc')
+    parser.add_argument('--test_remove_existing', action='store_true',
+                        help='Test software veto overwriting info from rundoc')
+
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument('--undying', action='store_true',
                          help="Except any error and ignore it")
@@ -188,6 +191,7 @@ class ReStrax(daq_core.DataBases):
         self.bypass_mode = args.bypass_mode
         self.overwrite_settings()
         self.test_software_veto = args.test_software_veto
+        self.test_remove_existing = args.test_remove_existing
 
     def infinite_loop(self, close=False) -> None:
         """Core of restrax, recompress the data followed by several validation steps"""
@@ -237,10 +241,15 @@ class ReStrax(daq_core.DataBases):
         first_run = f'{int(self.process):06}'
         data_docs = []
         for folder in folders:
+
+
             if os.path.exists(os.path.join(self.write_to, folder)):
-                self.log.info(f'Data exists, removing {os.path.join(self.write_to, folder)} to do it again')
-                # We are testing, delete everything and do it again
-                shutil.rmtree(os.path.join(self.write_to, folder))
+                if self.test_remove_existing:
+                    self.log.info(f'Data exists, removing {os.path.join(self.write_to, folder)} to do it again')
+                    # We are testing, delete everything and do it again
+                    shutil.rmtree(os.path.join(self.write_to, folder))
+                else:
+                    continue
 
             if len(split := folder.split('-')) and len(split[0]) == 6:
                 run_id, data_type, lineage = split
