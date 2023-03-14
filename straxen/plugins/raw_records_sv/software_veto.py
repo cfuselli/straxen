@@ -6,6 +6,20 @@ from straxen.plugins.raw_records_sv._software_veto_base import RawRecordsSoftwar
 export, __all__ = strax.exporter()
 
 @export
+class DummyVeto(RawRecordsSoftwareVetoBase):
+    """
+    Test software veto framework: keep eveything
+    """
+
+    __version__ = 'dummy-veto-0.0.1'
+
+    def software_veto_mask(self, e):
+        
+        m = e['time'] > 0 
+        
+        return m
+
+@export
 class RadialVeto(RawRecordsSoftwareVetoBase):
     """
     Radial sofrtare veto 
