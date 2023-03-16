@@ -135,6 +135,13 @@ class ReStrax(daq_core.DataBases):
         'raw_records', 'raw_records_nv', 'raw_records_mv', 'raw_records_he',
         'records', 'records_nv', 'records_mv')
 
+    # TODO do better here
+    _raw_record_types = raw_record_types
+    for t in raw_record_types:
+        _raw_record_types += (t+'_sv',)
+    raw_record_types = _raw_record_types
+
+
     exclude_modes: ty.Iterable = (
         'pmtgain', 'pmtap', 'exttrig', 'noise', 'nVeto_LASER_calibration',
         'mv_diffuserballs', 'mv_fibres', 'mv_darkrate')
@@ -259,7 +266,7 @@ class ReStrax(daq_core.DataBases):
                     if os.path.exists(os.path.join(self.write_to, folder)):
                         # We want to test again, we do the work again
                         self.log.info(f'Data exists, removing {os.path.join(self.write_to, folder)} to do it again')
-                        #shutil.rmtree(os.path.join(self.write_to, folder))
+                        shutil.rmtree(os.path.join(self.write_to, folder))
 
                 data_docs.append({'host': self.hostname,
                                   'location': os.path.join(self.read_from, folder),
@@ -354,10 +361,10 @@ class ReStrax(daq_core.DataBases):
     def _bypass_for_data_doc(self, data_doc: dict) -> None:
         source = data_doc['location']
         dest = self.renamed_path(source)
-        if _check_before_moving(source, dest):
+        if self._check_before_moving(source, dest):
             self._move_dir(source, dest)
 
-    def _check_before_moving(source, dest) -> bool:
+    def _check_before_moving(self, source, dest) -> bool:
         if os.path.exists(dest):
             # Honestly don't know how this could happen, but we have to be carefull here
             # We are dealing with single copies, so this is a tricky operation.
@@ -382,11 +389,8 @@ class ReStrax(daq_core.DataBases):
         data_docs = self._get_data_docs(run_doc)
         self.log.info(f'{run_doc["number"]} -> doing {len(data_docs)}')
 
-        software_veto_is_on = self.software_veto_is_on(run_doc)
+        data_docs, original_docs = self.software_veto_docs(data_docs)
 
-        if software_veto_is_on:
-            self.log.info(f'Software veto is on, considering only software_veto docs')
-            data_docs, original_docs, no_sv_version_docs = self.software_veto_docs(data_docs)
 
         # Split the work in files that we will compress and files that will skip compression
         compress_docs = [
@@ -396,6 +400,7 @@ class ReStrax(daq_core.DataBases):
             d for d in data_docs if
             self.should_skip_compression(run_doc, d)
         ]
+
         self.log.debug(f'Compressing {len(compress_docs)} docs and skipping (i.e. move) {len(skip_docs)} docs')
         assert len(compress_docs) + len(skip_docs) == len(data_docs), "one and one is three?! "
 
@@ -409,26 +414,17 @@ class ReStrax(daq_core.DataBases):
         for move_doc in skip_docs:
             self._bypass_for_data_doc(move_doc)
 
-        if software_veto_is_on:
-            self.log.info(f'Software veto is on, now hacking metadata, dirnames and rundoc and rundb')
-            data_docs = self.software_veto_hack_copies_to_originals(run_doc, data_docs, original_docs)
+        data_docs = self.software_veto_hack_copies_to_originals(run_doc, data_docs, original_docs)
             
-            # Move doc if we didn't find its software veto twin            
-            for move_doc in no_sv_version_docs:
-                self.log.debug(f"Moving doc {move_doc['type']} because no SV copy was found")
-                self._bypass_for_data_doc(move_doc)
-            
-            self._delete_data_from_rundb(run_doc, original_docs)
 
         self.finalize_execute(data_docs)
 
         # Only remove the data that we rechunked (there are now two copies),
         # the moved data is always just a single copy
         self.remove_old_docs(compress_docs)
-
-        if software_veto_is_on:
-            self.log.info(f'Software veto is on, removing also original docs')
-            self.remove_old_docs(original_docs)
+        
+        self.remove_old_docs(original_docs)
+        self._delete_data_from_rundb(run_doc, original_docs)
 
         self.log.info(f'{run_doc["number"]} succes')
 
@@ -448,21 +444,8 @@ class ReStrax(daq_core.DataBases):
         data_docs = sorted(data_docs, key=size, reverse=True)
         return data_docs
 
-    def software_veto_is_on(self, run_doc: dict):
-        """Get if software veto is on from the rundoc"""
 
-        if self.test_software_veto and not self.production:
-            return True
-
-        elif self.production:
-            
-
-
-
-
-        
-
-    def software_veto_docs(self, data_docs: ty.List[dict]) -> (ty.List[dict], ty.List[dict], ty.List[dict]):
+    def software_veto_docs(self, data_docs: ty.List[dict]) -> (ty.List[dict], ty.List[dict]):
         """Replace the entire docs with only the docs of software veto data"""
 
         # #TODO put the suffix _sv somewhere common not hardcoded everywhere
@@ -470,26 +453,15 @@ class ReStrax(daq_core.DataBases):
             return [d for d in docs if d['type'] in ts]
 
         all_targets = set([d['type'] for d in data_docs])
-        sv = {t for t in all_targets if t.endswith('_sv')}
-        all_targets -= sv
-        no_sv = {t for t in all_targets if f'{t}_sv' not in sv}
-        original_copies = all_targets - no_sv
-        return _filter_docs(data_docs, sv), _filter_docs(data_docs, original_copies), _filter_docs(data_docs, no_sv)
 
+        original_copies = {t for t in all_targets if t+'_sv' in all_targets}
+        
+        to_process = all_targets - original_copies
 
-        # #TODO find better variable names here
-        # consider_sv_docs = [d for d in data_docs if d['type'].endswith('_sv')]
-        # all_original_docs = [d for d in data_docs if not d['type'].endswith('_sv')]
-
-        # consider_sv_docs_types = [d['type'][:-3] for d in consider_sv_docs]
-        # all_original_docs_types = [d['type'] for d in all_original_docs]
-
-        # no_sv_version_types = [t for t in all_original_docs_types if t not in consider_sv_docs_types]
-
-        # original_docs = [d for d in all_original_docs if d['type'] not in no_sv_version_types]
-        # no_sv_version_docs = [d for d in all_original_docs if d['type'] in no_sv_version_types]
-
-        # return (consider_sv_docs, original_docs, no_sv_version_docs)
+        for t in original_copies:
+            self.log.info(f'Detected SoftwareVeto for {t}, so I will process its SV copy')
+        
+        return _filter_docs(data_docs, to_process), _filter_docs(data_docs, original_copies)
 
 
     def software_veto_hack_copies_to_originals(self, run_doc: dict, data_docs: ty.List[dict], original_docs: ty.List[dict]) -> ty.List[dict]: 
@@ -498,69 +470,75 @@ class ReStrax(daq_core.DataBases):
         data is the same lineage as the original data. 
         We need to update the
         """
+        new_data_docs = data_docs.copy()
 
         # TODO style of this function is terrible
-        for d in data_docs:
+        for _i, d in enumerate(data_docs):
 
-            type_in = d['type']
-            type_orig = d['type'].replace('_sv', '')
+            if d['type'].endswith('_sv'):
 
-            # TODO check if they are more than one
-            d_orig = [d for d in original_docs if d['type'] == type_orig]
-            assert len(d_orig) == 1, f" two copies of the same data?! {type_orig}"
-            d_orig = d_orig[0]
+                type_in = d['type']
+                type_orig = d['type'].replace('_sv', '')
 
-            lineage_in = d['meta']['lineage_hash']
-            lineage_orig = d_orig['meta']['lineage_hash']
+                # TODO check if they are more than one
+                d_orig = [d for d in original_docs if d['type'] == type_orig]
+                assert len(d_orig) == 1, f" two copies of the same data?! {type_orig}"
+                d_orig = d_orig[0]
 
-            dir_in = d['location']
-            dir_orig = d_orig['location']
-            dir_out = self.renamed_path(dir_in)
+                lineage_in = d['meta']['lineage_hash']
+                lineage_orig = d_orig['meta']['lineage_hash']
 
-            backend = strax.FileSytemBackend()
-            md_orig = backend.get_metadata(dir_orig)
-            md_in = backend.get_metadata(dir_in)
-            md_out = backend.get_metadata(dir_out)
+                dir_in = d['location']
+                dir_orig = d_orig['location']
+                dir_out = self.renamed_path(dir_in)
 
-            split = dir_out.split('-')
-            split[-2] = split[-2].replace('_sv', '')
-            dir_out_hack = '-'.join(split[:-1]) + '-' + lineage_orig
-            
-            if _check_before_moving(source=dir_out, dest=dir_out_hack):
-                os.rename(dir_out, dir_out_hack)
-            
+                backend = strax.FileSytemBackend()
+                md_orig = backend.get_metadata(dir_orig)
+                md_in = backend.get_metadata(dir_in)
+                md_out = backend.get_metadata(dir_out)
 
-            dir_out = dir_out_hack
-
-            # Keep track of plugins used for veto
-            md_out['software_veto_lineage'] = md_out['lineage']
-            
-            # Change filenames in chunk info 
-            for i_chunk in range(len(md_out['chunks'])):
-                chunk_name = md_out['chunks'][i_chunk]['filename']
-                data_type, lineage, chunk_number = chunk_name.split('-')
-                data_type = data_type.replace('_sv', '')
-                new_chunk_name = '-'.join([data_type, lineage_orig, chunk_number])
-                md_out['chunks'][i_chunk]['filename'] = new_chunk_name
-                os.rename(os.path.join(dir_out, chunk_name), os.path.join(dir_out, new_chunk_name))
-
-            # Change lineage, kind and type to original raw_records 
-            for key in ['data_kind', 'data_type', 'lineage', 'lineage_hash']:
-                md_out[key] = md_orig[key]
+                split = dir_out.split('-')
+                split[-2] = split[-2].replace('_sv', '')
+                dir_out_hack = '-'.join(split[:-1]) + '-' + lineage_orig
                 
-            # TODO source from FileSaver
-            # write the new metadata file
-            json_options = dict(sort_keys=True, indent=4) 
-            new_md_json_name = '-'.join([type_orig, lineage_orig, 'metadata.json'])
-            with open(os.path.join(dir_out, new_md_json_name), mode='w') as f:
-                f.write(json.dumps(md_out, **json_options))
+                if self._check_before_moving(source=dir_out, dest=dir_out_hack):
+                    self.log.debug(f'from {dir_out} to {dir_out_hack}')
+                    os.rename(dir_out, dir_out_hack)
+                
+                dir_out = dir_out_hack
 
-            # remove the old metadata file
-            old_md_json_name = '-'.join([type_in, lineage_in, 'metadata.json'])
-            os.remove(os.path.join(dir_out, old_md_json_name))
-            
+                # Keep track of plugins used for veto
+                md_out['software_veto_lineage'] = md_out['lineage']
+                
+                # Change filenames in chunk info 
+                for i_chunk in range(len(md_out['chunks'])):
+                    chunk_name = md_out['chunks'][i_chunk]['filename']
+                    data_type, lineage, chunk_number = chunk_name.split('-')
+                    data_type = data_type.replace('_sv', '')
+                    new_chunk_name = '-'.join([data_type, lineage_orig, chunk_number])
+                    md_out['chunks'][i_chunk]['filename'] = new_chunk_name
+                    os.rename(os.path.join(dir_out, chunk_name), os.path.join(dir_out, new_chunk_name))
 
+                # Change lineage, kind and type to original raw_records 
+                for key in ['data_kind', 'data_type', 'lineage', 'lineage_hash']:
+                    md_out[key] = md_orig[key]
+                    
+                # TODO source from FileSaver
+                # write the new metadata file
+                json_options = dict(sort_keys=True, indent=4) 
+                new_md_json_name = '-'.join([type_orig, lineage_orig, 'metadata.json'])
+                with open(os.path.join(dir_out, new_md_json_name), mode='w') as f:
+                    f.write(json.dumps(md_out, **json_options))
 
+                # remove the old metadata file
+                old_md_json_name = '-'.join([type_in, lineage_in, 'metadata.json'])
+                os.remove(os.path.join(dir_out, old_md_json_name))
+
+                new_data_docs[_i]['location'] = dir_out
+        
+        return new_data_docs
+
+        
     def _delete_data_from_rundb(self, run_doc, data_docs, reason='Software veto applied'):
         """
         Delete data and update the rundoc. Used for software veto. 
@@ -709,6 +687,7 @@ class ReStrax(daq_core.DataBases):
             # no need to recompress data if it's only one chunk
             self.log.debug(f'Skip {data_type} -> only {n_chunks} chunks')
             return True
+        self.log.debug(f'Compress {data_type}')
         return False
 
     def do_checks(self, data_docs: ty.List[dict]) -> None:
@@ -851,6 +830,16 @@ class ReStrax(daq_core.DataBases):
         """
         # Maybe could merge this with do checks? -> Avoid opening metadate twice?
         # Then again, that is SO minor in the grand scheme of things, that I just leave it like this for the moment
+
+        if not self.production:
+            self.log.debug(f'Will now update rundb (no, just testing)')
+            for data_doc in data_docs:
+                dir_in = data_doc.get('location', '')
+                dir_out = self.renamed_path(dir_in)
+                storage_backend = strax.FileSytemBackend()
+                new_metadata = storage_backend.get_metadata(dir_out)
+                self.log.debug(f'{dir_in} --> {dir_out}')
+
         if not self.production or not len(data_docs):
             return
         storage_backend = strax.FileSytemBackend()
