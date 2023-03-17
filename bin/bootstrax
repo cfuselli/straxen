@@ -527,12 +527,14 @@ def infer_target(rd: dict, software_veto_on: bool = False) -> dict:
 
     if software_veto_on:
         # TODO study which targets_sv is better to have in targets or post
+        # TODO ERROR ERROR ERROR this gives errors if you try to make _nv_sv and does not exist
         _post = list(post_process)
         for t in targets:
             _post.append(t+'_sv')
         for t in post_process:
             _post.append(t+'_sv')
         post_process = tuple(_post)
+
 
     if args.fix_target:
         return {'targets': strax.to_str_tuple(targets),
@@ -598,6 +600,8 @@ def infer_target(rd: dict, software_veto_on: bool = False) -> dict:
             log.info(f'{rd["number"]:06} running in linked mode ({detectors}), '
                      f'processing up to {targets} and postprocessing '
                      f'to {post_process}')
+
+    
 
     if targets is None or not len(targets):
         targets = 'raw_records'
