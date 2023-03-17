@@ -58,8 +58,6 @@ def parse_args():
                         help='Only bother with doing the recompression if there are more than this many chunks')
     parser.add_argument('--bypass_mode', action='store_true',
                         help='Stop recompression and just rename folders. Use with care!')
-    parser.add_argument('--test_software_veto', action='store_true',
-                        help='Test software veto overwriting info from rundoc')
     parser.add_argument('--test_remove_existing', action='store_true',
                         help='Test software veto overwriting info from rundoc')
 
@@ -197,7 +195,6 @@ class ReStrax(daq_core.DataBases):
         self.recompress_min_chunks = args.recompress_min_chunks
         self.bypass_mode = args.bypass_mode
         self.overwrite_settings()
-        self.test_software_veto = args.test_software_veto
         self.test_remove_existing = args.test_remove_existing
 
     def infinite_loop(self, close=False) -> None:
@@ -454,14 +451,19 @@ class ReStrax(daq_core.DataBases):
 
         all_targets = set([d['type'] for d in data_docs])
 
-        original_copies = {t for t in all_targets if t+'_sv' in all_targets}
-        
-        to_process = all_targets - original_copies
+        have_sv_version = {t for t in all_targets if t+'_sv' in all_targets} # to delete
 
-        for t in original_copies:
+        to_process = all_targets - have_sv_version
+
+        if len(have_sv_version):
+            # we don't want to have mixed vetoed and non vetoed types, unless it's raw_records types
+            no_sv_version = {t for t in all_targets if t+'_sv' not in all_targets and not t.endswith('_sv')} 
+            assert len([t for t in no_sv_version if not t.startswith('raw_records')])==0, f'Something is wrong here, you are asking me to process a type that has no software veto version \n\n {no_sv_version} \n\n {self.raw_record_types}'
+
+        for t in have_sv_version:
             self.log.info(f'Detected SoftwareVeto for {t}, so I will process its SV copy')
-        
-        return _filter_docs(data_docs, to_process), _filter_docs(data_docs, original_copies)
+
+        return _filter_docs(data_docs, to_process), _filter_docs(data_docs, have_sv_version)
 
 
     def software_veto_hack_copies_to_originals(self, run_doc: dict, data_docs: ty.List[dict], original_docs: ty.List[dict]) -> ty.List[dict]: 
@@ -545,7 +547,6 @@ class ReStrax(daq_core.DataBases):
         :param run_doc: rundoc
         :param data_docs: docs of data to be deleted
         """
-        # TODO
         # Remove the data location from the rundoc and append it to the 'deleted_data' entries
 
         self.log.info('Deleting original data from rundb')
