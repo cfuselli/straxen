@@ -91,7 +91,7 @@ parser.add_argument(
     '--max_messages', type=int, default=10,
     help="number of max mailbox messages")
 parser.add_argument(
-    '--software_veto', default=False,
+    '--software_veto_overwrite', default=None,
     help="Class name of veto plugin to apply (i.e.: RadialVeto). It's overwritten by rundoc value.")
 
 actions = parser.add_mutually_exclusive_group()
@@ -516,7 +516,7 @@ def keep_target(targets, compare_with, n_fails):
     return kept_targets
 
 
-def infer_target(rd: dict) -> dict:
+def infer_target(rd: dict, software_veto_on: bool = False) -> dict:
     """
     Check if the target should be overridden based on the mode of the DAQ for this run
     :param rd: rundoc
@@ -524,6 +524,15 @@ def infer_target(rd: dict) -> dict:
     """
     targets = args.targets.copy()
     post_process = args.post_process.copy()
+
+    if software_veto_on:
+        # TODO study which targets_sv is better to have in targets or post
+        _post = list(post_process)
+        for t in targets:
+            _post.append(t+'_sv')
+        for t in post_process:
+            _post.append(t+'_sv')
+        post_process = tuple(_post)
 
     if args.fix_target:
         return {'targets': strax.to_str_tuple(targets),
@@ -1180,7 +1189,7 @@ def manual_fail(*, mongo_id=None, number=None, reason=''):
 def run_strax(run_id, input_dir, targets, readout_threads, compressor,
               run_start_time, samples_per_record, cores, max_messages, timeout,
               daq_chunk_duration, daq_overlap_chunk_duration, post_processing,
-              records_compressor, debug=False):
+              records_compressor, software_veto_name=None, debug=False):
     # Check mongo connection
     ping_dbs()
     # Clear the swap memory used by npshmmex
@@ -1204,19 +1213,19 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                          timeout=timeout,
                          )
 
+        if software_veto_name is not None:
+            # If the software veto is on, let's register the correct extra plugins
+            st = software_veto_register_plugins(st, software_veto_name)
+            
         for t in ('raw_records', 'records', 'records_nv', 'hitlets_nv'):
             # Set the (raw)records processor to the inferred one
             st._plugin_class_registry[t].compressor = records_compressor
+            try:
+                st._plugin_class_registry[t+'_sv'].compressor = records_compressor
+            except:
+                pass
 
-        if software_veto_is_on(args):
-        
 
-            _post_processing = list(post_processing)
-            for t in targets:
-                _post_processing.append(t+'_sv')
-            for t in post_processing:
-                _post_processing.append(t+'_sv')
-            post_processing = tuple(_post_processing)
 
         # Make a function for running strax, call the function to process the run
         # This way, it can also be run inside a wrapper to profile strax
@@ -1237,13 +1246,6 @@ def run_strax(run_id, input_dir, targets, readout_threads, compressor,
                     allow_multiple=True,
                     config=strax_config,
                     max_workers=cores)
-
-            if software_veto_is_on(args):
-                
-                software_veto_register_raw_records(st, args)
-
-                import straxen.plugins.raw_records_sv._software_veto_copies as _software_veto_copies
-                st.register_all(_software_veto_copies)
 
             if len(post_processing):
                 for post_target in post_processing:
@@ -1397,11 +1399,13 @@ def process_run(rd, send_heartbeats=args.production):
         except Exception as e:
             fail(f"Could not find start in datetime.datetime object: {str(e)}")
 
-        run_strax_config.update(infer_target(rd))
+        software_veto_on = software_veto_get_name(rd, args)['software_veto_name'] is not None
+        run_strax_config.update(infer_target(rd, software_veto_on))
         run_strax_config.update(infer_mode(rd))
+        run_strax_config.update(software_veto_get_name(rd, args))
         run_strax_config['debug'] = args.debug
 
-        log.info(f"We'll try to process the run with multiprocess instead of multiprocessing  (so we use dill)")
+        log.info(f"Processing run!")
         strax_proc = multiprocess.Process(
             target=run_strax,
             kwargs=run_strax_config)
@@ -1680,39 +1684,31 @@ def cleanup_db():
 
 
 
-def software_veto_is_on(args, rundoc=None):
+def software_veto_get_name(rd, args=None):
     """Decide if software veto is on based on arguments or rundoc"""
+    if args is not None:
+        if args.software_veto_overwrite is not None:
+            return {'software_veto_name': args.software_veto_overwrite}
     
-    # TODO add rundoc option
-    if (args.software_veto == None) | (args.software_veto is False):
-        return False
-    else:
-        return True
-
-def software_veto_get_name(args, rundoc=None):
-    """Get the needed raw_records plugin"""
-    
-    plugin_name = args.software_veto
-
-    # TODO overwrite from rundoc
-    # TODO add option if you want to overwrite from argument
+    return {'software_veto_name': rd.get('software_veto', None)}
 
     
-    return plugin_name
-    
-def software_veto_register_raw_records(st, args, rundoc=None):
+def software_veto_register_plugins(st, veto_name):
     """Based on the selection that we want to apply, 
     register the correct veto plugin.
     Probably we want to pass it as argument and if possible overwrite it from rundoc.
     Then register a copy of all the plugins. 
     """
 
-    # TODO
-    veto_name = software_veto_get_name(args, rundoc=None)
-
     import straxen.plugins.raw_records_sv.software_veto as software_veto
-    veto_plugin = getattr(straxen.plugins.raw_records_sv.software_veto, veto_name)
-    st.register(veto_plugin)
+    raw_records_sv_plugin = getattr(software_veto, veto_name)
+    st.register(raw_records_sv_plugin)
+    
+    import straxen.plugins.raw_records_sv._software_veto_copies as _software_veto_copies
+    st.register_all(_software_veto_copies)
+
+    return st
+
 
 
 
