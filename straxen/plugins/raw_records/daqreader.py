@@ -275,7 +275,7 @@ class DAQReader(strax.Plugin):
 
     def _artificial_dead_time(self, start, end, dt):
 
-        _dtype_for = self.depends_on[0] # raw_records
+        _dtype_for = self.provides[0] # raw_records
 
 
         return strax.dict_to_rec(
