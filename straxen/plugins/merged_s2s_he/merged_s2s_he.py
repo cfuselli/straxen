@@ -25,7 +25,9 @@ class MergedS2sHighEnergy(MergedS2s):
         return self.n_he_pmts
 
     def infer_dtype(self):
-        return strax.unpack_dtype(self.deps['peaklets_he'].dtype_for('peaklets_he'))
+        _dtype_for = self.depends_on[0] # raw_records
+
+        return strax.unpack_dtype(self.deps[_dtype_for].dtype_for(_dtype_for))
 
     def compute(self, peaklets_he):
         # There are not any lone hits for the high energy channel,

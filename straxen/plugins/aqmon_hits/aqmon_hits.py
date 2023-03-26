@@ -3,7 +3,7 @@ import numpy as np
 import strax
 import straxen
 
-from straxen.plugins.raw_records.daqreader import ARTIFICIAL_DEADTIME_CHANNEL
+from straxen.plugins.raw_records.daqreader import ARTIFICIAL_DEADTIME_CHANNEL, SOFTWARE_VETO_CHANNEL
 
 export, __all__ = strax.exporter()
 
@@ -17,6 +17,7 @@ class AqmonChannels(IntEnum):
     MV_TRIGGER = 797
     GPS_SYNC = 798
     ARTIFICIAL_DEADTIME = ARTIFICIAL_DEADTIME_CHANNEL
+    SOFTWARE_VETO = SOFTWARE_VETO_CHANNEL
     # Analogue sum waveform
     SUM_WF = 800
     # GPS sync acquisition monitor
@@ -63,6 +64,7 @@ class AqmonHits(strax.Plugin):
             # Fake signals, 0 meaning that we won't find hits using
             # strax but just look for starts and stops
             (0, (int(AqmonChannels.ARTIFICIAL_DEADTIME),)),
+            (0, (int(AqmonChannels.SOFTWARE_VETO),)),
         ),
         track=True,
         help='Minimum hit threshold in ADC*counts above baseline. Specified '
@@ -117,7 +119,10 @@ class AqmonHits(strax.Plugin):
             aqmon_thresholds[np.array(channels)] = hit_threshold
 
         # Split the artificial deadtime ones and do those separately if there are any
-        is_artificial = records['channel'] == AqmonChannels.ARTIFICIAL_DEADTIME
+        # here we also add the software veto because it's treated in the exact same way
+        is_artificial =  (records['channel'] == AqmonChannels.ARTIFICIAL_DEADTIME) 
+        is_artificial |= (records['channel'] == AqmonChannels.SOFTWARE_VETO)
+
         aqmon_hits = strax.find_hits(records[~is_artificial],
                                      min_amplitude=aqmon_thresholds)
 

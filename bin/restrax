@@ -33,6 +33,7 @@ import typing as ty
 from straxen import daq_core
 from memory_profiler import memory_usage
 import glob
+import json
 from ast import literal_eval
 from straxen.daq_core import now
 
@@ -57,6 +58,9 @@ def parse_args():
                         help='Only bother with doing the recompression if there are more than this many chunks')
     parser.add_argument('--bypass_mode', action='store_true',
                         help='Stop recompression and just rename folders. Use with care!')
+    parser.add_argument('--test_remove_existing', action='store_true',
+                        help='Test software veto overwriting info from rundoc')
+
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument('--undying', action='store_true',
                          help="Except any error and ignore it")
@@ -129,6 +133,13 @@ class ReStrax(daq_core.DataBases):
         'raw_records', 'raw_records_nv', 'raw_records_mv', 'raw_records_he',
         'records', 'records_nv', 'records_mv')
 
+    # TODO do better here
+    _raw_record_types = raw_record_types
+    for t in raw_record_types:
+        _raw_record_types += (t+'_sv',)
+    raw_record_types = _raw_record_types
+
+
     exclude_modes: ty.Iterable = (
         'pmtgain', 'pmtap', 'exttrig', 'noise', 'nVeto_LASER_calibration',
         'mv_diffuserballs', 'mv_fibres', 'mv_darkrate')
@@ -184,6 +195,7 @@ class ReStrax(daq_core.DataBases):
         self.recompress_min_chunks = args.recompress_min_chunks
         self.bypass_mode = args.bypass_mode
         self.overwrite_settings()
+        self.test_remove_existing = args.test_remove_existing
 
     def infinite_loop(self, close=False) -> None:
         """Core of restrax, recompress the data followed by several validation steps"""
@@ -234,8 +246,10 @@ class ReStrax(daq_core.DataBases):
         data_docs = []
         for folder in folders:
             if os.path.exists(os.path.join(self.write_to, folder)):
-                # Don't do work twice
-                continue
+                if not self.test_remove_existing:
+                    # Don't do the work again
+                    continue
+
             if len(split := folder.split('-')) and len(split[0]) == 6:
                 run_id, data_type, lineage = split
 
@@ -243,16 +257,24 @@ class ReStrax(daq_core.DataBases):
                     first_run = run_id
                 if run_id != first_run:
                     continue
+
                 self.log.info(f'Do {folder}')
+                if self.test_remove_existing:
+                    if os.path.exists(os.path.join(self.write_to, folder)):
+                        # We want to test again, we do the work again
+                        self.log.info(f'Data exists, removing {os.path.join(self.write_to, folder)} to do it again')
+                        shutil.rmtree(os.path.join(self.write_to, folder))
+
                 data_docs.append({'host': self.hostname,
                                   'location': os.path.join(self.read_from, folder),
                                   'type': data_type,
-                                  'linage_hash': lineage,
+                                  'meta': {'lineage_hash': lineage},
                                   })
         if not len(data_docs):
             return None
         run_doc = self.run_coll.find_one({'number': int(first_run)}, projection=projection)
         run_doc['data'] = data_docs
+
         return run_doc
 
     def _find_production_work(self, projection) -> ty.Optional[dict]:
@@ -336,6 +358,10 @@ class ReStrax(daq_core.DataBases):
     def _bypass_for_data_doc(self, data_doc: dict) -> None:
         source = data_doc['location']
         dest = self.renamed_path(source)
+        if self._check_before_moving(source, dest):
+            self._move_dir(source, dest)
+
+    def _check_before_moving(self, source, dest) -> bool:
         if os.path.exists(dest):
             # Honestly don't know how this could happen, but we have to be carefull here
             # We are dealing with single copies, so this is a tricky operation.
@@ -351,15 +377,18 @@ class ReStrax(daq_core.DataBases):
             message = f'Trying to move {source}->{dest} but {source} does not exist?!'
             self.log.error(message)
             self.log_warning(message)
-            return
-        self._move_dir(source, dest)
+            return False
+        return True
 
     def handle_run(self, run_doc: dict) -> None:
         """For a given batch of data_docs of a given run, do all the rechunking steps"""
         self.log.debug('start handle_run')
         data_docs = self._get_data_docs(run_doc)
         self.log.info(f'{run_doc["number"]} -> doing {len(data_docs)}')
-        # self.run_software_veto(run_doc)
+
+        # Software veto
+        data_docs, original_docs = self.software_veto_docs(data_docs)
+
 
         # Split the work in files that we will compress and files that will skip compression
         compress_docs = [
@@ -369,6 +398,7 @@ class ReStrax(daq_core.DataBases):
             d for d in data_docs if
             self.should_skip_compression(run_doc, d)
         ]
+
         self.log.debug(f'Compressing {len(compress_docs)} docs and skipping (i.e. move) {len(skip_docs)} docs')
         assert len(compress_docs) + len(skip_docs) == len(data_docs), "one and one is three?! "
 
@@ -382,11 +412,19 @@ class ReStrax(daq_core.DataBases):
         for move_doc in skip_docs:
             self._bypass_for_data_doc(move_doc)
 
+        # Software veto
+        data_docs = self.software_veto_hack_copies_to_originals(run_doc, data_docs, original_docs)
+            
         self.finalize_execute(data_docs)
 
         # Only remove the data that we rechunked (there are now two copies),
         # the moved data is always just a single copy
         self.remove_old_docs(compress_docs)
+        
+        # Software veto
+        self.remove_old_docs(original_docs)
+        self._delete_data_from_rundb(run_doc, original_docs)
+
         self.log.info(f'{run_doc["number"]} succes')
 
     def _get_data_docs(self, run_doc: dict):
@@ -405,9 +443,138 @@ class ReStrax(daq_core.DataBases):
         data_docs = sorted(data_docs, key=size, reverse=True)
         return data_docs
 
-    def run_software_veto(self, run_doc: dict):
-        """This is where we can add a software veto for specific runs"""
-        raise NotImplementedError
+
+    def software_veto_docs(self, data_docs: ty.List[dict]) -> (ty.List[dict], ty.List[dict]):
+        """Replace the entire docs with only the docs of software veto data"""
+
+        # #TODO put the suffix _sv somewhere common not hardcoded everywhere
+        def _filter_docs(docs, ts):
+            return [d for d in docs if d['type'] in ts]
+
+        all_targets = set([d['type'] for d in data_docs])
+
+        # Software veto is not on (or broken)
+        if not all(x in all_targets for x in ['raw_records_sv', 'raw_records_aqmon_sv']):
+            normal_targets = {t for t in all_targets if not t.endswith('_sv')} 
+            return _filter_docs(data_docs, normal_targets), _filter_docs(data_docs, [])
+
+        # Software veto is working
+        else:
+            sv_targets = {t+'_sv' for t in all_targets if t+'_sv' in all_targets} 
+            rr_to_pass = {t for t in all_targets if t.startswith('raw_records') and t+'_sv' not in all_targets}
+
+            to_delete = all_targets - sv_targets - rr_to_pass
+            to_process = all_targets - to_delete
+
+            for t in to_delete:
+                self.log.debug(f'Detected SV for {t} (or missing SV copy), so I will delete it')
+
+            for t in to_process:
+                self.log.debug(f'Will process {t}')
+
+            return _filter_docs(data_docs, to_process), _filter_docs(data_docs, to_delete)
+
+
+    def software_veto_hack_copies_to_originals(self, run_doc: dict, data_docs: ty.List[dict], original_docs: ty.List[dict]) -> ty.List[dict]: 
+        """
+        Here we do difficult software veto stuff. We need to fake that the now recompressed
+        data is the same lineage as the original data. 
+        We need to update the
+        """
+        new_data_docs = data_docs.copy()
+
+        # TODO style of this function is terrible
+        for _i, d in enumerate(data_docs):
+
+            if d['type'].endswith('_sv'):
+
+                type_in = d['type']
+                type_orig = d['type'].replace('_sv', '')
+
+                # TODO check if they are more than one
+                d_orig = [d for d in original_docs if d['type'] == type_orig]
+                assert len(d_orig) == 1, f" two copies of the same data?! {type_orig}"
+                d_orig = d_orig[0]
+
+                lineage_in = d['meta']['lineage_hash']
+                lineage_orig = d_orig['meta']['lineage_hash']
+
+                dir_in = d['location']
+                dir_orig = d_orig['location']
+                dir_out = self.renamed_path(dir_in)
+
+                backend = strax.FileSytemBackend()
+                md_orig = backend.get_metadata(dir_orig)
+                md_in = backend.get_metadata(dir_in)
+                md_out = backend.get_metadata(dir_out)
+
+                split = dir_out.split('-')
+                split[-2] = split[-2].replace('_sv', '')
+                dir_out_hack = '-'.join(split[:-1]) + '-' + lineage_orig
+                
+                if self._check_before_moving(source=dir_out, dest=dir_out_hack):
+                    self.log.debug(f'from {dir_out} to {dir_out_hack}')
+                    os.rename(dir_out, dir_out_hack)
+                
+                dir_out = dir_out_hack
+
+                # Keep track of plugins used for veto
+                md_out['software_veto_lineage'] = md_out['lineage']
+                
+                # Change filenames in chunk info 
+                for i_chunk in range(len(md_out['chunks'])):
+                    chunk_name = md_out['chunks'][i_chunk]['filename']
+                    data_type, lineage, chunk_number = chunk_name.split('-')
+                    data_type = data_type.replace('_sv', '')
+                    new_chunk_name = '-'.join([data_type, lineage_orig, chunk_number])
+                    md_out['chunks'][i_chunk]['filename'] = new_chunk_name
+                    os.rename(os.path.join(dir_out, chunk_name), os.path.join(dir_out, new_chunk_name))
+
+                # Change lineage, kind and type to original raw_records 
+                for key in ['data_kind', 'data_type', 'lineage', 'lineage_hash']:
+                    md_out[key] = md_orig[key]
+                    
+                # TODO source from FileSaver
+                # write the new metadata file
+                json_options = dict(sort_keys=True, indent=4) 
+                new_md_json_name = '-'.join([type_orig, lineage_orig, 'metadata.json'])
+                with open(os.path.join(dir_out, new_md_json_name), mode='w') as f:
+                    f.write(json.dumps(md_out, **json_options))
+
+                # remove the old metadata file
+                old_md_json_name = '-'.join([type_in, lineage_in, 'metadata.json'])
+                os.remove(os.path.join(dir_out, old_md_json_name))
+
+                new_data_docs[_i]['location'] = dir_out
+        
+        return new_data_docs
+
+        
+    def _delete_data_from_rundb(self, run_doc, data_docs, reason='Software veto applied'):
+        """
+        Delete data and update the rundoc. Used for software veto. 
+        :param run_doc: rundoc
+        :param data_docs: docs of data to be deleted
+        """
+        # Remove the data location from the rundoc and append it to the 'deleted_data' entries
+
+        self.log.info('Deleting original data from rundb')
+        for ddoc in data_docs:
+            self.log.info(f"Deleting {ddoc['location']}")
+            for k in ddoc.copy().keys():
+                if k in ['location', 'meta', 'protocol']:
+                    ddoc.pop(k)
+
+            ddoc.update({'at': now(), 'by': f'restrax.{self.hostname}', 'reason': reason})
+            if self.production:
+                run_coll.update_one({'_id': run_doc['_id']},
+                                    {"$addToSet": {'deleted_data': ddoc},
+                                    "$pull": {"data":
+                                                {"type": run_doc['type'],
+                                                    "host": {'$in': ['daq', self.hostname]}}}})
+            else:
+                self.log.info(f'Would update ddoc. But we are testing, so no db stuff!')
+        
 
     def rechunk_docs(self, run_doc: dict, data_docs: ty.List[dict]) -> None:
         """
@@ -535,6 +702,7 @@ class ReStrax(daq_core.DataBases):
             # no need to recompress data if it's only one chunk
             self.log.debug(f'Skip {data_type} -> only {n_chunks} chunks')
             return True
+        self.log.debug(f'Compress {data_type}')
         return False
 
     def do_checks(self, data_docs: ty.List[dict]) -> None:
@@ -683,6 +851,16 @@ class ReStrax(daq_core.DataBases):
         """
         # Maybe could merge this with do checks? -> Avoid opening metadate twice?
         # Then again, that is SO minor in the grand scheme of things, that I just leave it like this for the moment
+
+        if not self.production:
+            self.log.debug(f'Will now update rundb (no, just testing)')
+            for data_doc in data_docs:
+                dir_in = data_doc.get('location', '')
+                dir_out = self.renamed_path(dir_in)
+                storage_backend = strax.FileSytemBackend()
+                new_metadata = storage_backend.get_metadata(dir_out)
+                self.log.debug(f'{dir_in} --> {dir_out}')
+
         if not self.production or not len(data_docs):
             return
         storage_backend = strax.FileSytemBackend()
@@ -724,10 +902,12 @@ class ReStrax(daq_core.DataBases):
         self.log.info('Rundoc updated')
 
     def remove_old_docs(self, done_data_docs: ty.List[dict]):
+        """Remove old docs, only if in production mode"""
         for data_doc in done_data_docs:
             loc = data_doc.get('location', '??')
-            assert 'pre_processed' in loc
-            self._remove_dir(loc)
+            if self.production:
+                assert 'pre_processed' in loc
+                self._remove_dir(loc)
 
     def take_a_nap(self, dt: ty.Optional[int] = None):
         time.sleep(dt if dt is not None else self.nap_time)
@@ -754,12 +934,14 @@ class ReStrax(daq_core.DataBases):
         self.log.info(f'Move {source} -> {dest}')
         if self.production:
             os.rename(source, dest)
+        else:
+            # if we are testing just copy the files
+            shutil.copytree(source, dest, dirs_exist_ok=True)
 
     def _remove_dir(self, directory: str) -> None:
         """Remove directory (when in production mode)"""
         self.log.info(f'Remove {directory}')
-        if self.production:
-            shutil.rmtree(directory)
+        shutil.rmtree(directory)
 
     def log_warning(self, message: str, **kw) -> None:
         self.log.warning(message)

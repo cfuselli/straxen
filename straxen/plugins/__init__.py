@@ -83,3 +83,9 @@ from .afterpulses import *
 
 from . import led_cal
 from .led_cal import *
+
+
+#Software veto
+from .raw_records_sv import *
+from . import raw_records_sv
+
