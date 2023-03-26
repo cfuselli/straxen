@@ -93,7 +93,7 @@ class RawRecordsSoftwareVetoBase(strax.Plugin):
                 self._software_veto_time(
                     start=objects_to_delete['time'],
                     end=strax.endtime(objects_to_delete),
-                    dt=raw_records[0]['dt']
+                    dt=10 # TODO TODO TODO TODO bad 
                     )]))
 
         return result

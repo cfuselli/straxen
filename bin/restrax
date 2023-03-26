@@ -386,6 +386,7 @@ class ReStrax(daq_core.DataBases):
         data_docs = self._get_data_docs(run_doc)
         self.log.info(f'{run_doc["number"]} -> doing {len(data_docs)}')
 
+        # Software veto
         data_docs, original_docs = self.software_veto_docs(data_docs)
 
 
@@ -411,15 +412,16 @@ class ReStrax(daq_core.DataBases):
         for move_doc in skip_docs:
             self._bypass_for_data_doc(move_doc)
 
+        # Software veto
         data_docs = self.software_veto_hack_copies_to_originals(run_doc, data_docs, original_docs)
             
-
         self.finalize_execute(data_docs)
 
         # Only remove the data that we rechunked (there are now two copies),
         # the moved data is always just a single copy
         self.remove_old_docs(compress_docs)
         
+        # Software veto
         self.remove_old_docs(original_docs)
         self._delete_data_from_rundb(run_doc, original_docs)
 
@@ -451,19 +453,26 @@ class ReStrax(daq_core.DataBases):
 
         all_targets = set([d['type'] for d in data_docs])
 
-        have_sv_version = {t for t in all_targets if t+'_sv' in all_targets} # to delete
+        # Software veto is not on (or broken)
+        if not all(x in all_targets for x in ['raw_records_sv', 'raw_records_aqmon_sv']):
+            normal_targets = {t for t in all_targets if not t.endswith('_sv')} 
+            return _filter_docs(data_docs, normal_targets), _filter_docs(data_docs, [])
 
-        to_process = all_targets - have_sv_version
+        # Software veto is working
+        else:
+            sv_targets = {t+'_sv' for t in all_targets if t+'_sv' in all_targets} 
+            rr_to_pass = {t for t in all_targets if t.startswith('raw_records') and t+'_sv' not in all_targets}
 
-        if len(have_sv_version):
-            # we don't want to have mixed vetoed and non vetoed types, unless it's raw_records types
-            no_sv_version = {t for t in all_targets if t+'_sv' not in all_targets and not t.endswith('_sv')} 
-            assert len([t for t in no_sv_version if not t.startswith('raw_records')])==0, f'Something is wrong here, you are asking me to process a type that has no software veto version \n\n {no_sv_version} \n\n {self.raw_record_types}'
+            to_delete = all_targets - sv_targets - rr_to_pass
+            to_process = all_targets - to_delete
 
-        for t in have_sv_version:
-            self.log.info(f'Detected SoftwareVeto for {t}, so I will process its SV copy')
+            for t in to_delete:
+                self.log.debug(f'Detected SV for {t} (or missing SV copy), so I will delete it')
 
-        return _filter_docs(data_docs, to_process), _filter_docs(data_docs, have_sv_version)
+            for t in to_process:
+                self.log.debug(f'Will process {t}')
+
+            return _filter_docs(data_docs, to_process), _filter_docs(data_docs, to_delete)
 
 
     def software_veto_hack_copies_to_originals(self, run_doc: dict, data_docs: ty.List[dict], original_docs: ty.List[dict]) -> ty.List[dict]: 

@@ -527,12 +527,15 @@ def infer_target(rd: dict, software_veto_on: bool = False) -> dict:
 
     if software_veto_on:
         # TODO study which targets_sv is better to have in targets or post
-        # TODO ERROR ERROR ERROR this gives errors if you try to make _nv_sv and does not exist
+        # TODO THIS is bad!!
+        _targets = list(targets)
+        _targets.append('raw_records_sv')
+        _targets.append('peaklets_sv')
+
         _post = list(post_process)
-        for t in targets:
-            _post.append(t+'_sv')
-        for t in post_process:
-            _post.append(t+'_sv')
+        _post.append('event_info_sv')
+        
+        targets = tuple(_targets)
         post_process = tuple(_post)
 
 
