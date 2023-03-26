@@ -72,18 +72,17 @@ class PeakPositionsLPF(strax.Plugin):
             if p['type']==2:
                 # Only reconstruct s2 peaks. We do need to set the time of the peaks
                 try:
-                    # Some really small single electron s2s fail the minimization
+                    # Execute linearised position reconstruction fit
                     fit_result, xiter, user_hits = lpf_execute(self.pmt_pos[:self.n_top_pmts],
                                                     p['area_per_channel'][:self.n_top_pmts],
                                                     self.pmt_surface)
 
+                    # Error estimation function
                     err_x, err_y = lpf_deriv_95(self.pmt_pos[:self.n_top_pmts],
                                             p['area_per_channel'][:self.n_top_pmts],
                                             fit_result,
                                             used_hits)
 
-                    result[ix]['time'] = p['time']
-                    result[ix]['endtime'] = p['endtime']
                     result[ix]['x_lpf'] = fit_result[0]
                     result[ix]['y_lpf'] = fit_result[1]
                     result[ix]['lpf_r0'] = fit_result[2]
