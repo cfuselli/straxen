@@ -22,7 +22,8 @@ class EventAreaPerChannel(strax.LoopPlugin):
 
     def infer_dtype(self):
         # setting data type from peak dtype
-        pfields_=self.deps['peaks'].dtype_for('peaks').fields
+        _dtype_for = self.depends_on[1]
+        pfields_=self.deps[_dtype_for].dtype_for(_dtype_for).fields
         ## Populating data type
         infoline = {'s1': 'main S1', 
                     's2': 'main S2', 

@@ -311,7 +311,7 @@ class Peaklets(strax.Plugin):
 
         # Drop the data_top field
         if n_top_pmts_if_digitize_top <= 0:
-            peaklets = drop_data_top_field(peaklets, self.dtype_for('peaklets'))
+            peaklets = drop_data_top_field(peaklets, self.dtype_for(self.provides[0]))
 
         return dict(peaklets=peaklets,
                     lone_hits=lone_hits)
