@@ -1,6 +1,4 @@
 import sys, os
-sys.path.insert(0, '/daq_common/carlo/test_software/straxen_software_veto')
-
 import strax
 import straxen
 from immutabledict import immutabledict
