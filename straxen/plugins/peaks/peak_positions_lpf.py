@@ -1,33 +1,31 @@
 import strax
-import straxen
-from straxen.plugins.peaks._peak_positions_base import PeakPositionsBaseNT
-
-
-export, __all__ = strax.exporter()
-
-import strax
 import numpy as np
 import numba
 import straxen
+from numba import njit
 
+export, __all__ = strax.exporter()
+
+# A.P. Colijn -  Feb. 2021
+# Parameters for the fit
+lpf_iter_max = 100
+lpf_min_position_cor = 0.01 # convergence criterium for position minimizer
+lpf_npar = 4 # number of fit parameters
+#                       x      y      r0     gamma
+lpf_fix_par = np.array([False, False, False, False]) # which parameters to fix
 
 @export
 class PeakPositionsLPF(strax.Plugin):
     """
+    LPF = Linearized Position Fit
     Computes S2 position with linearized log-likelihood fit. 
     Returns xy position and the parameters of the fit.
-    See LinPosFit https://github.com/XAMS-nikhef/LinPosFit/ from A.P. Colijn
+    See LinPosFit https://github.com/XAMS-nikhef/LinPosFit/ 
+    from A.P. Colijn (Feb 2021)
     """
-    depends_on=('peaks','peak_basics')
+    depends_on =('peaks','peak_basics')
     provides = 'peak_positions_lpf'
-    rechunk_on_save=False
-    dtype= [('xml',np.float),
-            ('yml',np.float),
-            ('r0',np.float), 
-            ('gamma', np.float),
-            ('logl',np.float), 
-            ('n',np.int)]
-    dtype += strax.time_fields
+    rechunk_on_save = False
 
     n_top_pmts = straxen.URLConfig(default=straxen.n_top_pmts, infer_type=False,
                                    help="Number of top PMTs")
@@ -35,6 +33,21 @@ class PeakPositionsLPF(strax.Plugin):
     pmt_to_lxe = straxen.URLConfig(default=7, infer_type=False,
                                    help="Distance between the PMTs and the liquid interface")
     
+    def infer_dtype(self):
+
+        dtype = [('x_lpf',np.float32, 'Reconstructed x (cm) position, LinPosFit'),
+        ('y_lpf',np.float32, 'Reconstructed y (cm) position, LinPosFit'),
+        ('lpf_logl',np.float32, 'LinPosFit LogLikelihood value'), 
+        ('lpf_r0',np.float32, 'LinPosFit r0 parameter, reduced rate'), 
+        ('lpf_gamma', np.float32, 'LinPosFit gamma parameter, reflection'),
+        ('lpf_n',np.float32, 'LinPosFit parameter n, number of photons generated'),
+        ('lpf_err_x',np.float32, 'LinPosFit error on x (cm), 95p conficence interval'),
+        ('lpf_err_y',np.float32, 'LinPosFit error on y (cm), 95p conficence interval')
+        ]
+
+        dtype += strax.time_fields
+        return dtype
+
     def setup(self,):
         inch = 2.54 # cm
         pmt_pos = straxen.pmt_positions()
@@ -42,57 +55,51 @@ class PeakPositionsLPF(strax.Plugin):
         self.pmt_surface=(3*inch)**2*np.pi/4.
 
     def compute(self,peaks):
-        res = np.zeros(len(peaks),self.dtype)
         
+        result = np.ones(len(peaks), dtype=self.dtype)
+
+        result['time'], result['endtime'] = peaks['time'], strax.endtime(peaks)
+        result['x_lpf'] *= float('nan')
+        result['y_lpf'] *= float('nan')
+        result['lpf_r0'] *= float('nan')
+        result['lpf_logl'] *= float('nan')
+        result['lpf_n'] *= float('nan')
+        result['lpf_gamma'] *= float('nan')
+        result['lpf_err_x'] *= float('nan')
+        result['lpf_err_y'] *= float('nan')
+
         for ix, p in enumerate(peaks):
-            if p['type']!=2:
-                #Only reconstruct s2 peaks. We do need to set the time of the peaks
-                res[ix]['time'] = p['time']
-                res[ix]['endtime'] = p['endtime']
-                continue
-            try:
-                #Some really small single electron s2s fail the minimization
-                fit_result,_,_ = lpf_execute(self.pmt_pos[:self.n_top_pmts],p['area_per_channel'][:self.n_top_pmts],self.pmt_surface)
-                
-                res[ix]['time'] = p['time']
-                res[ix]['endtime'] = p['endtime']
-                res[ix]['xml'] = fit_result[0]
-                res[ix]['yml'] = fit_result[1]
-                res[ix]['r0'] = fit_result[2]
-                res[ix]['logl'] = fit_result[3]
-                res[ix]['n'] = fit_result[4]
-                res[ix]['gamma'] = fit_result[5]
-                
-            except Exception as e:
-                print(e)
-                res[ix]['time'] = p['time']
-                res[ix]['endtime'] = p['endtime']
-                continue
+            if p['type']==2:
+                # Only reconstruct s2 peaks. We do need to set the time of the peaks
+                try:
+                    # Some really small single electron s2s fail the minimization
+                    fit_result, xiter, user_hits = lpf_execute(self.pmt_pos[:self.n_top_pmts],
+                                                    p['area_per_channel'][:self.n_top_pmts],
+                                                    self.pmt_surface)
 
-        return res
+                    err_x, err_y = lpf_deriv_95(self.pmt_pos[:self.n_top_pmts],
+                                            p['area_per_channel'][:self.n_top_pmts],
+                                            fit_result,
+                                            used_hits)
 
+                    result[ix]['time'] = p['time']
+                    result[ix]['endtime'] = p['endtime']
+                    result[ix]['x_lpf'] = fit_result[0]
+                    result[ix]['y_lpf'] = fit_result[1]
+                    result[ix]['lpf_r0'] = fit_result[2]
+                    result[ix]['lpf_logl'] = fit_result[3]
+                    result[ix]['lpf_n'] = fit_result[4]
+                    result[ix]['lpf_gamma'] = fit_result[5]
+                    result[ix]['lpf_err_x'] = err_x
+                    result[ix]['lpf_err_y'] = err_y
+                    
+                except Exception as e:
+                    # Sometimes inverting the matrix fails.. 
+                    # Let's just leave it as a NaN
+                    pass
 
+        return result
 
-
-import numpy as np
-from numba import njit
-
-# from matplotlib.colors import BoundaryNorm
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from matplotlib.ticker import MaxNLocator
-from IPython.display import clear_output
-
-# lpf = linearized position fit
-# 
-# A.P. Colijn -  Feb. 2021
-lpf_iter_max = 100
-lpf_min_position_cor = 0.01 # convergence criterium for position minimizer
-lpf_npar = 4 # number of fit parameters
-#                       x      y      r0     gamma
-lpf_fix_par = np.array([False, False, False, False]) # which parameters to fix
-#
-debug = False
 
 
 def lpf_execute(xhit, nhit, area_sensor):
@@ -235,10 +242,7 @@ def lpf_initialize(xhit, nhit):
     else: # we calculate the center-of-gravity as initial position
         xhit_max = xcluster / (nmax+n_around)
     
-    if debug:
-        print('--- lpf_initialize --- hit fraction = ',hit_frac)
-        print('--- lpf_initialize --- found_cluster = ',found_cluster)
-    
+
     # refine the determination of the initial position
     # logl_min = 1e12
     # xtemp = np.zeros(3)
@@ -603,212 +607,28 @@ def lpf_deriv_dist_min2(i, xi, xf):
 
     return deriv
 
-
-# --------------------------------------------------------------------------------------- #
-def lpf_event_display(xhit, nhit, fit_result, hit_is_used, xiter, **kwargs):
+@njit
+def lpf_deriv_95(xhit, nhit, fit_result, hit_is_used, **kwargs):
     """
-    Event display
-
-    :param xhit:
-    :param nhit:
-    :param fit_result:
-    :param hit-is_used: 
-    :param xiter:
-    :param kwargs:
-    :return:
+    Error estimation for LinPosFit
+    Bachelor thesis: Ezra de Cleen, Nikhef, June 2022
     """
+
+    deriv_x = 0
+    deriv_y = 0
     
-    xhit = np.array(xhit)
-    nhit = np.array(nhit)
+    for isensor in range(len(nhit)):
 
-    plot_range = kwargs.pop('range', None)
-    zoom = kwargs.pop('zoom',-1)
-    nbins = kwargs.pop('nbins', 15)
-
-    if plot_range == 'None':
-        plot_range = ((0, 100), (0, 100))
-
-    if zoom > 0:
-        plot_range = ((fit_result[0]-zoom/2,fit_result[0]+zoom/2),(fit_result[1]-zoom/2,fit_result[1]+zoom/2))
+        xff = np.array([fit_result[0],fit_result[1],0])
         
-    print("Reconstruction::lpf_event_display() ")
-    fig = plt.figure(figsize=(16, 6))
+        deriv_x += lpf_deriv_f(0, 0, xhit[isensor], nhit[isensor], xff, fit_result[2], fit_result[5])
 
-    gs = GridSpec(2, 2, figure=fig)
-    ax0 = plt.subplot(gs.new_subplotspec((0, 0), rowspan=2))
-    ax1 = plt.subplot(gs.new_subplotspec((0, 1), rowspan=1))
-    ax2 = plt.subplot(gs.new_subplotspec((1, 1), rowspan=1))
+        xff = np.array([fit_result[0],fit_result[1],0])
 
-    # ax1 = plt.subplot(222)
-    # ax2 = plt.subplot(224)
+        deriv_y += lpf_deriv_f(1, 1, xhit[isensor], nhit[isensor], xff, fit_result[2], fit_result[5])
 
-    #    fig, ax0 = plt.subplots(nrows=1)
+    x_95 = 1*(1/np.sqrt(deriv_x))
+    y_95 = 1*(1/np.sqrt(deriv_y))
 
-    # make a list of the intermediate steps
-    xp = []
-    yp = []
-    nn = []
-    iiter = []
-    for i in range(len(xiter)):
-        if xiter[i][3] != 0:
-            xp.append(xiter[i][0])
-            yp.append(xiter[i][1])
-            nn.append(xiter[i][2])
-            iiter.append(i)
-    xp = np.array(xp)
-    yp = np.array(yp)
-    nn = np.array(nn)
-    iiter = np.array(iiter)
-
-    niter = len(xp)
-    ax1.plot(iiter, xp-fit_result[0])
-    ax1.plot(iiter, yp-fit_result[1])
-    ax1.set_xlabel('iteration')
-    ax1.set_ylabel('difference between position and fit result')
-    ax2.plot(iiter, nn)
-    ax2.set_xlabel('iteration')
-    ax2.set_ylabel('number of photons')
-
-    # make these smaller to increase the resolution
-    dx, dy = (plot_range[0][1]-plot_range[0][0])/400,(plot_range[1][1]-plot_range[1][0])/400
-
-    # generate 2 2d grids for the x & y bounds
-    x = np.arange(plot_range[0][0], plot_range[0][1], dx)
-    y = np.arange(plot_range[1][0], plot_range[1][1], dy)
-    z = np.zeros((len(y), len(x)))
-
-    #print(x,y)
-    for i in range(len(x)):
-        for j in range(len(y)):
-            xx = x[i]
-            yy = y[j]
-            xff = np.array([xx,yy,0])
-            #print('xfit =',xff,' r0 =',xiter[niter-1][2])
-            z[j][i] = lpf_lnlike_plot(xhit, nhit, hit_is_used, xff, xiter[niter-1][2], xiter[niter-1][5])
-
-    # z = z[:-1, :-1]
-    levels = MaxNLocator(nbins=nbins).tick_values(z.min(), z.max())
-
-    # cmap = plt.get_cmap('afmhot')
-    cmap = plt.get_cmap('PiYG')
-
-    # norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
-
-    # ax0 = fig.gca()
-
-    cf = ax0.contourf(x + dx / 2., y + dy / 2., z, levels=levels, cmap=cmap)
-    fig.colorbar(cf, ax=ax0)
-    title_string = 'x = {:8.2f} y = {:8.2f} r0= {:8.2f}'.format(fit_result[0], fit_result[1], fit_result[2])
-    ax0.set_title(title_string)
-
-    # add the light detectors
-    mx_eff = -1
-    for ih in range(len(nhit)):
-        if nhit[ih] > mx_eff:
-            mx_eff = nhit[ih]
-
-    for ih in range(len(nhit)):
-        # draw location of SiPM
-        xs = xhit[ih]
-
-        # plot sensor only if in range
-        if (xs[0] > plot_range[0][0]) & (xs[0] < plot_range[0][1]) & \
-                (xs[1] > plot_range[1][0]) & (xs[1] < plot_range[1][1]):
-            #dx = nhit[ih] / mx_eff *10 
-            rr = (nhit[ih]+0.25) / mx_eff *10
-            #sq = plt.Rectangle(xy=(xs[0] - dx / 2, xs[1] - dx / 2),
-            #                   height=dx,
-            #                   width=dx,
-            #                   fill=False, color='red')
-            if nhit[ih]>0:
-                if hit_is_used[ih]:
-                    color = 'red'
-                else:
-                    color = 'black'
-                sq = plt.Circle(xy=(xs[0], xs[1]),
-                                radius=rr,
-                                fill=False, color=color)
-            else:
-                sq = plt.Circle(xy=(xs[0], xs[1]),
-                                radius=rr,
-                                fill=False, color='black')
-
-            ax0.add_artist(sq)
-            # write number of detected photons
-            ### txs = str(nhit[ih])
-            ### ax0.text(xs[0] + dx / 2 + 2.5, xs[1], txs, color='red')
-
-    # initial position
-    ax0.plot(xiter[0][0], xiter[0][1], 'o', markersize=10, color='cyan')
-    ax0.plot(xp, yp, 'w-o', markersize=5)
-
-    # true position
-    # plt.plot(self.sim.get_x0()[0], self.sim.get_x0()[1], 'x', markersize=14, color='cyan')
-    # reconstructed position
-    # if abs(self.fdata['xr']) < 100:
-    ax0.plot(fit_result[0], fit_result[1], 'wo', markersize=10)
-    ax0.set_xlabel('x (cm)', fontsize=18)
-    ax0.set_ylabel('y (cm)', fontsize=18)
-    ax0.set_xlim([plot_range[0][0],plot_range[0][1]])
-    ax0.set_ylim([plot_range[1][0],plot_range[1][1]])
-    plt.show()
-
-    istat = int(input("Type: 0 to continue, 1 to make pdf, 2 to quit...."))
-
-    if istat == 1:
-        fname = 'event.pdf'
-        fig.savefig(fname)
-        fname = 'event.png'
-        fig.savefig(fname)
-
-    clear_output()
-    return istat
-
-
-#------------------------------
-def difference(pmt_pos,nhit,xml,yml,r0,gamma):
-    """
-    Give a plot of the expected number of hits and the detected number of hits
-    Also shows the impact of the gamma factor on the expected number of hits
-    """
-    
-    #different lists used
-    difference_n = []
-    x_lijst = []
-    y_lijst = []
-    n_exp_lijst = []
-    n_exp_gamma_lijst = []
-    x_nexp_lijst = []
-    
-    #loops through all the PMTs
-    for iii in range(len(pmt_pos)):
-        x_nexp_lijst.append(iii)
         
-        # calculate expected number of hits
-        n_exp = lpf_nexp(pmt_pos[iii],(xml,yml,0),r0,gamma)
-        difference = (((n_exp-nhit[iii])))/(n_exp**0.5)
-        difference_n.append(difference)
-        n_exp_lijst.append(n_exp)
-        n_exp_gamma_lijst.append(n_exp - gamma)
-        x_lijst.append(pmt_pos[iii][0])
-        y_lijst.append(pmt_pos[iii][1])
-
-    # bins the detected hits into clear datapoints with error values
-    nbins5 = 100
-    n15, _____ = np.histogram(x_nexp_lijst, bins=nbins5)
-    sy15, _____ = np.histogram(x_nexp_lijst, bins=nbins5, weights=(nhit))
-    sy215, _____ = np.histogram(x_nexp_lijst, bins=nbins5, weights=(nhit)*(nhit))
-    mean15 = sy15 / n15
-    std15 = np.sqrt(sy215/n15 - mean15*mean15)
-    
-    # plots the expected number of photons with and without gamma
-    plt.errorbar((_____[1:] + _____[:-1])/2, mean15, yerr=std15, fmt='ko',zorder=10)
-    plt.plot(n_exp_lijst,label= "Fitted hits with gamma",linewidth = 2,color = 'red',zorder=5)
-    plt.plot(n_exp_gamma_lijst, '--',label= "Fitted hits without gamma",linewidth = 2,color = 'red',zorder=0) 
-    plt.xlabel("PMT number",fontsize=14)
-    plt.ylabel("number of hits",fontsize=14)
-    plt.legend(loc="upper right")
-    plt.yscale('log')
-    plt.xlim(0,250)
-    plt.ylim(0,10000)
-    plt.show()
+    return x_95, y_95
