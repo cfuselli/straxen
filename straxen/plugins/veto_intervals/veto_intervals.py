@@ -29,8 +29,10 @@ class VetoIntervals(strax.OverlapWindowPlugin):
      - hev_*   <= DDC10 hardware high energy veto
      - straxen_deadtime <= special case of deadtime introduced by the
        DAQReader-plugin
+     - software_veto <= raw_records are removed by software veto at event level
+
     """
-    __version__ = '1.1.1'
+    __version__ = '1.1.2'
     depends_on = 'aqmon_hits'
     provides = 'veto_intervals'
     data_kind = 'veto_intervals'
@@ -90,8 +92,8 @@ class VetoIntervals(strax.OverlapWindowPlugin):
 
         # Straxen deadtime is special, it's a start and stop with no data
         # but already an interval so easily used here
-        artificial_deadtime = aqmon_hits[(aqmon_hits['channel'] ==
-                                          AqmonChannels.ARTIFICIAL_DEADTIME)]
+        is_artificial =  (aqmon_hits['channel'] == AqmonChannels.ARTIFICIAL_DEADTIME) 
+        artificial_deadtime = aqmon_hits[is_artificial]
         n_artificial = len(artificial_deadtime)
 
         if n_artificial:
@@ -99,6 +101,18 @@ class VetoIntervals(strax.OverlapWindowPlugin):
             result[vetos_seen:n_artificial]['endtime'] = strax.endtime(artificial_deadtime)
             result[vetos_seen:n_artificial]['veto_type'] = 'straxen_deadtime_veto'
             vetos_seen += n_artificial
+
+        # Software veto is also special, same as artificial deadtime
+        # so with no data but just time interval. Treated in the same way
+        is_software_veto = (aqmon_hits['channel'] == AqmonChannels.SOFTWARE_VETO)
+        software_veto = aqmon_hits[is_software_veto]
+        n_software_veto = len(software_veto)
+
+        if n_software_veto:
+            result[vetos_seen:vetos_seen+n_software_veto]['time'] = software_veto['time']
+            result[vetos_seen:vetos_seen+n_software_veto]['endtime'] = strax.endtime(software_veto)
+            result[vetos_seen:vetos_seen+n_software_veto]['veto_type'] = 'software_veto'
+            vetos_seen += n_software_veto
 
         result = result[:vetos_seen]
         result['veto_interval'] = result['endtime'] - result['time']

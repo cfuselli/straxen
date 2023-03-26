@@ -32,7 +32,8 @@ class Peaks(strax.Plugin):
              "It's now possible for a S1 to be inside a S2 post merging")
 
     def infer_dtype(self):
-        return self.deps['peaklets'].dtype_for('peaklets')
+        _dtype = self.depends_on[0] # peaklets
+        return self.deps[_dtype].dtype_for(_dtype)
 
     def compute(self, peaklets, merged_s2s):
         # Remove fake merged S2s from dirty hack, see above

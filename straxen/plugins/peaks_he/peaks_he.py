@@ -21,7 +21,8 @@ class PeaksHighEnergy(Peaks):
     child_ends_with = '_he'
 
     def infer_dtype(self):
-        return self.deps['peaklets_he'].dtype_for('peaklets')
+        _dtype_for = self.depends_on[0]
+        return self.deps[_dtype_for].dtype_for(_dtype_for)
 
     def compute(self, peaklets_he, merged_s2s_he):
         return super().compute(peaklets_he, merged_s2s_he)
