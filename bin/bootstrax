@@ -1742,7 +1742,7 @@ if __name__ == '__main__':
         from memory_profiler import memory_usage
         import time
         start = time.time()
-        mem = memory_usage(proc=(main, (args,)))
+        mem = memory_usage(proc=main)
         print(f"Memory profiler says peak RAM usage was: {max(mem):.1f} MB")
         print(f'Took {time.time() - start:.1f} s = {(time.time() - start) / 3600:.2f} h ')
         print('Bye, bye')
