@@ -302,8 +302,9 @@ def new_context(cores=args.cores,
         # Keep the rundb but set it to readonly and local only, delete
         # all other storage frontends except fo the test folder.
         context.storage = [context.storage[0],
-                           strax.DataDirectory(output_folder),
-                           strax.DataDirectory(args.test_input_folder, readonly=True)]
+                           strax.DataDirectory(output_folder)]
+        if args.test_input_folder is not None:
+            context.storage += [strax.DataDirectory(args.test_input_folder, readonly=True)]
         context.storage[0].readonly = True
         context.storage[0].local_only = True
 
@@ -1349,7 +1350,7 @@ def process_run(rd, send_heartbeats=args.production):
             # or maybe it's in the /data dir:
             if not osp.exists(loc):
                 loc = os.path.join('/data/xenonnt_bootstrax_test/', run_id)
-                
+
         else:
             for dd in rd['data']:
                 if 'type' not in dd:
