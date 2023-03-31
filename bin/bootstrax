@@ -91,6 +91,9 @@ parser.add_argument(
 parser.add_argument(
     '--software_veto_overwrite', default=None,
     help="Class name of veto plugin to apply (i.e.: RadialVeto). It's overwritten by rundoc value.")
+parser.add_argument(
+    '--test_input_folder', default=None,
+    help="Add to storage")
 
 actions = parser.add_mutually_exclusive_group()
 actions.add_argument(
@@ -299,7 +302,8 @@ def new_context(cores=args.cores,
         # Keep the rundb but set it to readonly and local only, delete
         # all other storage frontends except fo the test folder.
         context.storage = [context.storage[0],
-                           strax.DataDirectory(output_folder)]
+                           strax.DataDirectory(output_folder),
+                           strax.DataDirectory(args.test_input_folder, readonly=True)]
         context.storage[0].readonly = True
         context.storage[0].local_only = True
 
@@ -1342,7 +1346,10 @@ def process_run(rd, send_heartbeats=args.production):
             # or use the test-dir:
             if not osp.exists(loc):
                 loc = os.path.join('/live_data/xenonnt_bootstrax_test/', run_id)
-
+            # or maybe it's in the /data dir:
+            if not osp.exists(loc):
+                loc = os.path.join('/data/xenonnt_bootstrax_test/', run_id)
+                
         else:
             for dd in rd['data']:
                 if 'type' not in dd:

@@ -45,7 +45,7 @@ class HighEnergyVeto(RawRecordsSoftwareVetoBase):
 
     def software_veto_mask(self, e):
         
-        m = (e['s1_area'] > 1000) & (e['s2_area'] > 100000)
+        m = (e['s1_area'] > 1e4) & (e['s2_area'] > 1e5)
         
         return m
 

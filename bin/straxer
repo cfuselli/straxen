@@ -116,6 +116,10 @@ def parse_args():
         default='',
         help='Also add folder to st.storage')
     parser.add_argument(
+        '--add_input_folder',
+        default='',
+        help='Also add folder to st.storage in readonly mode')
+    parser.add_argument(
         '--print_alive',
         default=300,
         help='Print that straxer is still running every this many [seconds]')
@@ -187,6 +191,10 @@ def setup_context(args):
         else:
             st.storage += [
                 strax.DataDirectory('./strax_data')]
+
+    if args.add_input_folder != '':
+        if os.path.exists(args.add_input_folder):
+            st.storage += [strax.DataDirectory(args.add_input_folder, readonly=True)]
 
     if args.add_folder != '':
         for sf in st.storage:
