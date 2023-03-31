@@ -53,9 +53,6 @@ parser.add_argument(
     '--debug', action='store_true',
     help="Start strax processes with debug logging.")
 parser.add_argument(
-    '--profile_memory', action='store_true',
-    help="Get memory usage.")
-parser.add_argument(
     '--profile', type=str, default='false',
     help="Run strax in profiling mode. Specify target filename as argument.")
 parser.add_argument(
@@ -1728,7 +1725,7 @@ def software_veto_register_plugins(st, veto_name):
 
 
 
-########################### 
+###########################
 #        __MAIN__         #
 ###########################
 
@@ -1738,31 +1735,22 @@ if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
     multiprocess.set_start_method('spawn')
 
-    if args.profile_memory:
-        from memory_profiler import memory_usage
-        import time
-        start = time.time()
-        mem = memory_usage(proc=main)
-        print(f"Memory profiler says peak RAM usage was: {max(mem):.1f} MB")
-        print(f'Took {time.time() - start:.1f} s = {(time.time() - start) / 3600:.2f} h ')
-        print('Bye, bye')
+    if not args.undying:
+        main()
     else:
-        if not args.undying:
-            main()
-        else:
-            while True:
+        while True:
+            try:
+                main()
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as fatal_error:
+                log.error(f'Fatal warning:\tran into {fatal_error}. Try '
+                        f'logging error and restart bootstrax')
                 try:
-                    main()
-                except (KeyboardInterrupt, SystemExit):
-                    raise
-                except Exception as fatal_error:
-                    log.error(f'Fatal warning:\tran into {fatal_error}. Try '
-                            f'logging error and restart bootstrax')
-                    try:
-                        log_warning(f'Fatal warning:\tran into {fatal_error}',
-                                    priority='error')
-                    except Exception as warning_error:
-                        log.error(f'Fatal warning:\tcould not log {warning_error}')
-                    # This usually only takes a minute or two
-                    time.sleep(60)
-                    log.warning('Restarting main loop')
+                    log_warning(f'Fatal warning:\tran into {fatal_error}',
+                                priority='error')
+                except Exception as warning_error:
+                    log.error(f'Fatal warning:\tcould not log {warning_error}')
+                # This usually only takes a minute or two
+                time.sleep(60)
+                log.warning('Restarting main loop')
