@@ -22,6 +22,9 @@ from .peak_positions_gcn import *
 from . import peak_positions_mlp
 from .peak_positions_mlp import *
 
+from . import peak_positions_lpf
+from .peak_positions_lpf import *
+
 from . import peak_proximity
 from .peak_proximity import *
 
