@@ -38,9 +38,10 @@ class PeakPositionsLPF(strax.Plugin):
         dtype = [('x_lpf',np.float32, 'Reconstructed x (cm) position, LinPosFit'),
         ('y_lpf',np.float32, 'Reconstructed y (cm) position, LinPosFit'),
         ('lpf_logl',np.float32, 'LinPosFit LogLikelihood value'), 
-        ('lpf_r0',np.float32, 'LinPosFit r0 parameter, reduced rate'), 
+        ('lpf_nuv',np.float32, 'LinPosFit parameter n, number of photons generated'),
         ('lpf_gamma', np.float32, 'LinPosFit gamma parameter, reflection'),
-        ('lpf_n',np.float32, 'LinPosFit parameter n, number of photons generated'),
+        ('lpf_n_in_fit',np.float32, 'LinPosFit number of PMTs included in the fit'),
+        ('lpf_r0',np.float32, 'LinPosFit r0 parameter, reduced rate'), 
         ('lpf_err_x',np.float32, 'LinPosFit error on x (cm), 95p conficence interval'),
         ('lpf_err_y',np.float32, 'LinPosFit error on y (cm), 95p conficence interval')
         ]
@@ -61,10 +62,11 @@ class PeakPositionsLPF(strax.Plugin):
         result['time'], result['endtime'] = peaks['time'], strax.endtime(peaks)
         result['x_lpf'] *= float('nan')
         result['y_lpf'] *= float('nan')
-        result['lpf_r0'] *= float('nan')
+        result['lpf_nuv'] *= float('nan')
         result['lpf_logl'] *= float('nan')
-        result['lpf_n'] *= float('nan')
+        result['lpf_n_in_fit'] *= float('nan')
         result['lpf_gamma'] *= float('nan')
+        result['lpf_r0'] *= float('nan')
         result['lpf_err_x'] *= float('nan')
         result['lpf_err_y'] *= float('nan')
 
@@ -73,24 +75,19 @@ class PeakPositionsLPF(strax.Plugin):
                 # Only reconstruct s2 peaks. We do need to set the time of the peaks
                 try:
                     # Execute linearised position reconstruction fit
-                    fit_result, xiter, user_hits = lpf_execute(self.pmt_pos[:self.n_top_pmts],
+                    fit_result, xiter, used_hits = lpf_execute(self.pmt_pos[:self.n_top_pmts],
                                                     p['area_per_channel'][:self.n_top_pmts],
                                                     self.pmt_surface)
 
-                    # Error estimation function
-                    err_x, err_y = lpf_deriv_95(self.pmt_pos[:self.n_top_pmts],
-                                            p['area_per_channel'][:self.n_top_pmts],
-                                            fit_result,
-                                            used_hits)
-
                     result[ix]['x_lpf'] = fit_result[0]
                     result[ix]['y_lpf'] = fit_result[1]
-                    result[ix]['lpf_r0'] = fit_result[2]
+                    result[ix]['lpf_nuv'] = fit_result[2]
                     result[ix]['lpf_logl'] = fit_result[3]
-                    result[ix]['lpf_n'] = fit_result[4]
+                    result[ix]['lpf_n_in_fit'] = fit_result[4]
                     result[ix]['lpf_gamma'] = fit_result[5]
-                    result[ix]['lpf_err_x'] = err_x
-                    result[ix]['lpf_err_y'] = err_y
+                    result[ix]['lpf_r0'] = fit_result[6]
+                    result[ix]['lpf_err_x'] = fit_result[7]
+                    result[ix]['lpf_err_y'] = fit_result[8]
                     
                 except Exception as e:
                     # Sometimes inverting the matrix fails.. 
@@ -115,6 +112,7 @@ def lpf_execute(xhit, nhit, area_sensor):
     nhit = np.array(nhit)
     # minimize the likelihood
     fit_result, xiter, hit_is_used = lpf_minimize(xhit, nhit, area_sensor)
+
     return fit_result, xiter, hit_is_used
 
 @njit
@@ -390,7 +388,7 @@ def lpf_minimize(xhit, nhit, area_sensor):
 
     # store the fit results
     #
-    fit_result = np.zeros(7)
+    fit_result = np.zeros(9)
     fit_result[0] = xfit[0]
     fit_result[1] = xfit[1]
     fit_result[2] = nuv
@@ -407,7 +405,11 @@ def lpf_minimize(xhit, nhit, area_sensor):
     fit_result[5] = gamma
     fit_result[6] = r0
 
+    errors = lpf_deriv_95(xhit, nhit, hit_is_used, xfit, nuv, gamma)
 
+    fit_result[7] =  errors[0]   
+    fit_result[8] =  errors[1]
+    
     return fit_result, xiter, hit_is_used
 
 
@@ -607,27 +609,38 @@ def lpf_deriv_dist_min2(i, xi, xf):
     return deriv
 
 @njit
-def lpf_deriv_95(xhit, nhit, fit_result, hit_is_used, **kwargs):
+def lpf_deriv_95(xhit, nhit, hit_is_used, xfit, nuv, gamma):
     """
     Error estimation for LinPosFit
     Bachelor thesis: Ezra de Cleen, Nikhef, June 2022
     """
 
-    deriv_x = 0
-    deriv_y = 0
+    # deriv_x = 0
+    # deriv_y = 0
     
-    for isensor in range(len(nhit)):
+    # for isensor in np.arange(len(nhit)):
 
-        xff = np.array([fit_result[0],fit_result[1],0])
+    #     xff = np.zeros(3)
+    #     xff[0] = xfit[0]
+    #     xff[1] = xfit[1]
+    #     xff[2] = 0.
         
-        deriv_x += lpf_deriv_f(0, 0, xhit[isensor], nhit[isensor], xff, fit_result[2], fit_result[5])
+    #     # m[i][j] = m[i][j] + lpf_deriv_f(i, j, xhit[isensor], nhit[isensor], xfit, r0, gamma)
 
-        xff = np.array([fit_result[0],fit_result[1],0])
-
-        deriv_y += lpf_deriv_f(1, 1, xhit[isensor], nhit[isensor], xff, fit_result[2], fit_result[5])
-
-    x_95 = 1*(1/np.sqrt(deriv_x))
-    y_95 = 1*(1/np.sqrt(deriv_y))
-
+    #     deriv_x = deriv_x + lpf_deriv_f(float(0), float(0), xhit[isensor], nhit[isensor], xff, nuv, gamma)
+    #     deriv_y = deriv_y + lpf_deriv_f(float(1), float(1), xhit[isensor], nhit[isensor], xff, nuv, gamma)
+    
         
-    return x_95, y_95
+    # return x_95, y_95
+
+
+    err = np.zeros(2)
+
+    for i in np.arange(2):
+        for isensor in range(len(nhit)):
+            err[i] = err[i] + lpf_deriv_f(i, i, xhit[isensor], nhit[isensor], xfit, nuv, gamma)
+
+        err[i] = 1/np.sqrt(err[i])
+
+    return err
+
