@@ -7,7 +7,7 @@ import straxen
 export, __all__ = strax.exporter()
 
 @export
-class BiPoVariables(strax.LoopPlugin):
+class BiPoVariables(strax.Plugin):
     """
     Compute:
     - peak properties
@@ -18,7 +18,7 @@ class BiPoVariables(strax.LoopPlugin):
     are given for the five S2.
     """
         
-    __version__ = '3.0.1'
+    __version__ = '4.0.0'
     
     depends_on = ('events',
                   'peak_basics',
@@ -60,7 +60,6 @@ class BiPoVariables(strax.LoopPlugin):
         self.posrec_save = [(xy + algo, xy + algo) for xy in ['x_', 'y_'] for algo in self.pos_rec_labels] # ???? 
         self.to_store = [name for name, _, _ in self.peak_properties]
 
-
     def infer_dtype(self):
                 
         # Basic event properties  
@@ -90,70 +89,58 @@ class BiPoVariables(strax.LoopPlugin):
                                           np.float32, f'S2_{n} {algo}-reconstructed Y position, uncorrected [cm]')]
 
         return basics_dtype
+
+    @staticmethod
+    def set_nan_defaults(buffer):
+        """
+        When constructing the dtype, take extra care to set values to
+        np.Nan / -1 (for ints) as 0 might have a meaning
+        """
+        for field in buffer.dtype.names:
+            if np.issubdtype(buffer.dtype[field], np.integer):
+                buffer[field][:] = -1
+            else:
+                buffer[field][:] = np.nan
+
+    @staticmethod
+    def get_largest_sx_peaks(peaks,
+                             s_i,
+                             number_of_peaks=2):
+        """Get the largest S1/S2. For S1s allow a min coincidence and max time"""
+        # Find all peaks of this type (S1 or S2)
+
+        s_mask = peaks['type'] == s_i
+        selected_peaks = peaks[s_mask]
+        s_index = np.arange(len(peaks))[s_mask]
+        largest_peaks = np.argsort(selected_peaks['area'])[-number_of_peaks:][::-1]
+        return selected_peaks[largest_peaks], s_index[largest_peaks]
             
-    def compute_loop(self, event, peaks):
-        
-        result = dict(time=event['time'],
-                      endtime=strax.endtime(event))
-        result['n_peaks'] = len(peaks)
 
-        if not len(peaks):
-            return result   
-                
-        ########
-        #  S1  #
-        ########
-        
-        mask_s1s  = (peaks['type']==1) 
-        mask_s1s &= (peaks['area']>100)
+    def compute(self, events, peaks):
 
-        if not len(peaks[mask_s1s]):
-            return result
-        
-        ## Save the biggest peaks
-        max_s1s = min(self.max_n_s1, len(peaks[mask_s1s]))        
- 
-        # Need to initialize them to be able to use them in S2 mask without errors
-        result['s1_time_0'], result['s1_time_1'] = float('nan'), float('nan')
-        for i, p in enumerate(reversed(np.sort(peaks[mask_s1s], order='area'))): 
-                
-            for prop in self.to_store:
-                result[f's1_{prop}_{i}'] = p[prop] 
-            if i == self.max_n_s1 - 1:
-                break
+        result = np.zeros(len(events), dtype=self.dtype)
+        self.set_nan_defaults(result)
 
-        result['n_incl_peaks_s1'] = max_s1s
+        split_peaks = strax.split_by_containment(peaks, events)
 
-        ########
-        ## S2  #
-        ########
-        
-        # TODO
-        # all this mask thingis should me moved to the next plugin 
-        # you can have a minimal one but should be very basic
-        # the complicated stuff should be in the matching plugin
-        # and this one can be used generally (not only for bipos)
-        # same for the S1s
-        
-        mask_s2s  = peaks['type']==2
-        mask_s2s &= peaks['area'] > 1500                                # low area limit
-        mask_s2s &= peaks['area_fraction_top'] > 0.5                    # to remove S1 afterpulses
-        mask_s2s &= np.abs(peaks['time'] - result['s1_time_0']) > 1000  # again to remove afterpulses
-        mask_s2s &= np.abs(peaks['time'] - result['s1_time_1']) > 1000  # and again to remove afterpulses
-        mask_s2s &= peaks['time']-result['s1_time_0'] < 5000000         # 5000mus, S2 is too far in time, not related to Po
-        
-        if not len(peaks[mask_s2s]):
-            return result
-        
-        max_s2s = min(self.max_n_s2, len(peaks[mask_s2s]))
-        for i, p in enumerate(reversed(np.sort(peaks[mask_s2s], order='area'))):
-            for prop in self.to_store:
-                result[f's2_{prop}_{i}'] = p[prop]  
-            for name_alg in self.posrec_save:
-                result[f's2_{name_alg[0]}_{i}'] = p[name_alg[1]]
-            if i == self.max_n_s2 - 1:
-                break
-        
-        result['n_incl_peaks_s2'] = max_s2s        
+        result['time'] = events['time']
+        result['endtime'] = events['endtime']
+
+        for event_i, _ in enumerate(events):
+
+            peaks_in_event_i = split_peaks[event_i]
+
+            largest_s1s, s1_idx = self.get_largest_sx_peaks(peaks_in_event_i, s_i=1, number_of_peaks=self.max_n_s1)
+            largest_s2s, s2_idx = self.get_largest_sx_peaks(peaks_in_event_i, s_i=2, number_of_peaks=self.max_n_s2)
+
+            for i, p in enumerate(largest_s1s): 
+                for prop in self.to_store:
+                    result[event_i][f's1_{prop}_{i}'] = p[prop]
+
+            for i, p in enumerate(largest_s2s):
+                for prop in self.to_store:
+                    result[event_i][f's2_{prop}_{i}'] = p[prop]  
+                for name_alg in self.posrec_save:
+                    result[event_i][f's2_{name_alg[0]}_{i}'] = p[name_alg[1]]
 
         return result
