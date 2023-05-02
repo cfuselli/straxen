@@ -64,5 +64,8 @@ from .multi_scatter import *
 from . import event_basics_multi
 from .event_basics_multi import *
 
+from . import event_basics_multi_s2_shape_fit
+from .event_basics_multi_s2_shape_fit import *
+
 from . import event_bipo_matching
 from .event_bipo_matching import *
