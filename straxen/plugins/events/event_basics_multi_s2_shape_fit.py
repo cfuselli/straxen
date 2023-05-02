@@ -48,10 +48,8 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
         basics_dtype = []
         basics_dtype += strax.time_fields
 
-
-            
         # For S2s
-        p_type == 2
+        p_type = 2
         max_n = self.max_n_s2
         for n in range(max_n):
             # Peak properties
