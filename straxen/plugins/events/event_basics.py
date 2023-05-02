@@ -3,9 +3,7 @@ import numpy as np
 import numba
 import straxen
 
-
 export, __all__ = strax.exporter()
-
 
 @export
 class EventBasics(strax.Plugin):

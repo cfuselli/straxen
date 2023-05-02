@@ -15,7 +15,7 @@ class EventBiPoBasics(straxen.EventBasics):
     __version__ = '0.0.3'
     
     depends_on = ('events',
-                  'bi_po_variables',
+                  'event_basics_multi',
                   'bi_po_214_matching',
                   'peak_basics',
                   'peak_positions',

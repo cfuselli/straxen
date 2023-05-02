@@ -7,7 +7,7 @@ import straxen
 export, __all__ = strax.exporter()
 
 @export
-class BiPoVariables(strax.Plugin):
+class EventBasicsMulti(strax.Plugin):
     """
     Compute:
     - peak properties
@@ -15,7 +15,7 @@ class BiPoVariables(strax.Plugin):
     of the first three main (in area) S1 and ten S2.
     
     The standard PosRec algorithm and the three different PosRec algorithms (mlp, gcn, cnn)
-    are given for the five S2.
+    are given for the S2s.
     """
         
     __version__ = '4.0.0'
@@ -26,7 +26,7 @@ class BiPoVariables(strax.Plugin):
                   'peak_proximity')
     
     # TODO change name
-    provides = 'bi_po_variables'
+    provides = 'event_basics_multi'
     data_kind = 'events'
     loop_over = 'events'
     

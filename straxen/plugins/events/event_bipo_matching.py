@@ -24,7 +24,7 @@ class BiPo214Matching(strax.Plugin):
         Time tolerance window in ns to match S2 signals to BiPo214 events. Default is 3000 ns.
     """
     
-    depends_on=('bi_po_variables', )   
+    depends_on=('event_basics_multi', )   
     provides = 'bi_po_214_matching'
 
     __version__ = "2.1.7"
