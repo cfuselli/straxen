@@ -13,7 +13,7 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
 
     """
         
-    __version__ = '4.0.0'
+    __version__ = '5.0.0'
     
     depends_on = ('events',
                   'peaks')
@@ -31,6 +31,7 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
     peak_properties = (
             # name                dtype       comment
             ('chi2', np.float32, 'chi2'),
+            ('dt',np.int,'dt of peak'),
             ('ampl', np.float32, 'ampl'),
             ('mean', np.float32, 'mean'),
             ('sigma', np.float32, 'sigma'),
@@ -120,6 +121,7 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
                 result[event_i][f's2_fit_ampl_{i}']  = popt[0]*max(p['data'])               
                 result[event_i][f's2_fit_mean_{i}']  = popt[1]
                 result[event_i][f's2_fit_sigma_{i}'] = popt[2]
+                result[event_i][f's2_fit_dt_{i}'] = p['dt']
                 result[event_i][f's2_fit_area_{i}']  = max(p['data'])*popt[0]*popt[2]/(1/np.sqrt(2*np.pi))
 
         return result
