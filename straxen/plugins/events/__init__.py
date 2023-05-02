@@ -61,8 +61,8 @@ from .local_minimum_info import *
 from . import multi_scatter
 from .multi_scatter import *
 
-from . import event_bipo_variables
-from .event_bipo_variables import *
+from . import event_basics_multi
+from .event_basics_multi import *
 
 from . import event_bipo_matching
 from .event_bipo_matching import *
