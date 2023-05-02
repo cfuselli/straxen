@@ -37,11 +37,6 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
             )
     
 
-    def setup(self):
-
-        self.posrec_save = [(xy + algo, xy + algo) for xy in ['x_', 'y_'] for algo in self.pos_rec_labels] # ???? 
-        self.to_store = [name for name, _, _ in self.peak_properties]
-
     def infer_dtype(self):
                 
         # Basic event properties  
