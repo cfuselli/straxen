@@ -51,7 +51,7 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
 
             
         # For S2s
-        p_type == 2:
+        p_type == 2
         max_n = self.max_n_s2
         for n in range(max_n):
             # Peak properties
