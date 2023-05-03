@@ -13,7 +13,7 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
 
     """
         
-    __version__ = '5.0.0'
+    __version__ = '6.0.0'
     
     depends_on = ('events',
                   'peaks')
@@ -105,17 +105,22 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
                 x = np.arange(200)[:p['length']]
                 y = p['data'][:p['length']]/max(p['data'])  # assuming you want to fit the first peak
 
+                _p = x[y > np.exp(-0.5)*y.max()]
+                guess_sigma = 0.5*(_p.max() - _p.min())
+
+                p0 = [1, np.argmax(y), guess_sigma]
+
                 # Fit the data with one Gaussian                
                 try:
-                    popt, pcov = curve_fit(self.gaussian, x, y, p0=[.1, 80, 10])
+                    popt, pcov = curve_fit(self.gaussian, x, y, p0=p0)
                 except Exception as e:
                     popt = [0,0,0]
                 
                 # Calculate the chi-square goodness of fit statistic
+                popt[2] = np.abs(popt[2])
                 residuals = y - self.gaussian(x, *popt)
                 chi2 = np.sum(residuals**2)
                 chi2_red = chi2 / (len(x) - len(popt))
-
 
                 result[event_i][f's2_fit_chi2_{i}']  = chi2_red
                 result[event_i][f's2_fit_ampl_{i}']  = popt[0]*max(p['data'])               

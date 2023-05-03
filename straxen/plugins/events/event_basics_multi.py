@@ -18,7 +18,7 @@ class EventBasicsMulti(strax.Plugin):
     are given for the S2s.
     """
         
-    __version__ = '4.0.0'
+    __version__ = '5.0.0'
     
     depends_on = ('events',
                   'peak_basics',
@@ -65,9 +65,7 @@ class EventBasicsMulti(strax.Plugin):
         # Basic event properties  
         basics_dtype = []
         basics_dtype += strax.time_fields
-        basics_dtype += [('n_peaks', np.int32, 'Number of peaks in the event'),
-                        ('n_incl_peaks_s1', np.int32, 'Number of included S1 peaks in the event'),
-                        ('n_incl_peaks_s2', np.int32, 'Number of included S2 peaks in the event')]
+        basics_dtype += [('n_peaks', np.int32, 'Number of peaks in the event'),]
 
         # For S1s and S2s
         for p_type in [1, 2]:
