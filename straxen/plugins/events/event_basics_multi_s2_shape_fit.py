@@ -13,9 +13,10 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
 
     """
         
-    __version__ = '6.0.0'
+    __version__ = '7.0.0'
     
     depends_on = ('events',
+                  'bi_po_214_matching',
                   'peaks')
     
     # TODO change name
@@ -93,41 +94,43 @@ class EventBasicsMultiS2ShapeFit(strax.Plugin):
         result['time'] = events['time']
         result['endtime'] = events['endtime']
 
-        for event_i, _ in enumerate(events):
+        for event_i, e in enumerate(events):
 
-            peaks_in_event_i = split_peaks[event_i]
+            if e['s2_bi_match']>-5:
 
-            largest_s2s, s2_idx = self.get_largest_sx_peaks(peaks_in_event_i, s_i=2, number_of_peaks=self.max_n_s2)
+                peaks_in_event_i = split_peaks[event_i]
 
-            for i, p in enumerate(largest_s2s):
+                largest_s2s, s2_idx = self.get_largest_sx_peaks(peaks_in_event_i, s_i=2, number_of_peaks=self.max_n_s2)
 
-                # Define the data to be fit
-                x = np.arange(200)[:p['length']]
-                y = p['data'][:p['length']]/max(p['data'])  # assuming you want to fit the first peak
+                for i, p in enumerate(largest_s2s):
 
-                _p = x[y > np.exp(-0.5)*y.max()]
-                guess_sigma = 0.5*(_p.max() - _p.min())
+                    # Define the data to be fit
+                    x = np.arange(200)[:p['length']]
+                    y = p['data'][:p['length']]/max(p['data'])  # assuming you want to fit the first peak
 
-                p0 = [1, np.argmax(y), guess_sigma]
+                    _p = x[y > np.exp(-0.5)*y.max()]
+                    guess_sigma = 0.5*(_p.max() - _p.min())
 
-                # Fit the data with one Gaussian                
-                try:
-                    popt, pcov = curve_fit(self.gaussian, x, y, p0=p0)
-                except Exception as e:
-                    popt = [0,0,0]
-                
-                # Calculate the chi-square goodness of fit statistic
-                popt[2] = np.abs(popt[2])
-                residuals = y - self.gaussian(x, *popt)
-                chi2 = np.sum(residuals**2)
-                chi2_red = chi2 / (len(x) - len(popt))
+                    p0 = [1, np.argmax(y), guess_sigma]
 
-                result[event_i][f's2_fit_chi2_{i}']  = chi2_red
-                result[event_i][f's2_fit_ampl_{i}']  = popt[0]*max(p['data'])               
-                result[event_i][f's2_fit_mean_{i}']  = popt[1]
-                result[event_i][f's2_fit_sigma_{i}'] = popt[2]
-                result[event_i][f's2_fit_dt_{i}'] = p['dt']
-                result[event_i][f's2_fit_area_{i}']  = max(p['data'])*popt[0]*popt[2]/(1/np.sqrt(2*np.pi))
+                    # Fit the data with one Gaussian                
+                    try:
+                        popt, pcov = curve_fit(self.gaussian, x, y, p0=p0)
+                    except Exception as e:
+                        popt = [0,0,0]
+                    
+                    # Calculate the chi-square goodness of fit statistic
+                    popt[2] = np.abs(popt[2])
+                    residuals = y - self.gaussian(x, *popt)
+                    chi2 = np.sum(residuals**2)
+                    chi2_red = chi2 / (len(x) - len(popt))
+
+                    result[event_i][f's2_fit_chi2_{i}']  = chi2_red
+                    result[event_i][f's2_fit_ampl_{i}']  = popt[0]*max(p['data'])               
+                    result[event_i][f's2_fit_mean_{i}']  = popt[1]
+                    result[event_i][f's2_fit_sigma_{i}'] = popt[2]
+                    result[event_i][f's2_fit_dt_{i}'] = p['dt']
+                    result[event_i][f's2_fit_area_{i}']  = max(p['data'])*popt[0]*popt[2]/(1/np.sqrt(2*np.pi))
 
         return result
 
