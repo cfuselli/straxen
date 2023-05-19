@@ -77,4 +77,34 @@ class EventBiPoBasics(straxen.EventBasics):
                                                         field_names,
                                                         peak_properties_to_save)
 
+    @staticmethod
+    @numba.njit
+    def set_event_properties(result, largest_s1s, largest_s2s, peaks):
+        """Get properties like drift time and area before main S2"""
+        # Compute drift times only if we have a valid S1-S2 pair
+        if len(largest_s1s) > 0 and len(largest_s2s) > 0:
+            result['drift_time'] = largest_s2s[0]['center_time'] - largest_s1s[0]['center_time']
+
+            # Correcting alt S1 and S2 based on BiPo 
+
+            if len(largest_s1s) > 1:
+                result['alt_s1_interaction_drift_time'] = largest_s2s[1]['center_time'] - largest_s1s[1]['center_time']
+                result['alt_s1_delay'] = largest_s1s[1]['center_time'] - largest_s1s[0]['center_time']
+            if len(largest_s2s) > 1:
+                result['alt_s2_interaction_drift_time'] = largest_s2s[1]['center_time'] - largest_s1s[1]['center_time']
+                result['alt_s2_delay'] = largest_s2s[1]['center_time'] - largest_s2s[0]['center_time']
+
+        # areas before main S2
+        if len(largest_s2s):
+            peaks_before_ms2 = peaks[peaks['time'] < largest_s2s[0]['time']]
+            result['area_before_main_s2'] = np.sum(peaks_before_ms2['area'])
+
+            s2peaks_before_ms2 = peaks_before_ms2[peaks_before_ms2['type'] == 2]
+            if len(s2peaks_before_ms2) == 0:
+                result['large_s2_before_main_s2'] = 0
+            else:
+                result['large_s2_before_main_s2'] = np.max(s2peaks_before_ms2['area'])
+        return result
+
+
 
