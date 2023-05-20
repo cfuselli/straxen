@@ -12,7 +12,7 @@ class EventBiPoBasics(straxen.EventBasics):
     Carlo explain please
     """
         
-    __version__ = '0.0.3'
+    __version__ = '1.0.0'
     
     depends_on = ('events',
                   'event_basics_multi',
