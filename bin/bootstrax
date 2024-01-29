@@ -107,6 +107,15 @@ parser.add_argument(
         "be used if some run is very valuable but some checks are failing."
     ),
 )
+parser.add_argument(
+    "--ignore_n_failures",
+    action="store_true",
+    help=(
+        "Does not reduce the number of cores and max_messages if a run has "
+        "failed before. Should only be used in testing."
+    ),
+)
+
 parser.add_argument("--max_messages", type=int, default=10, help="number of max mailbox messages")
 parser.add_argument(
     '--test_live_data_folder', default=None,
@@ -584,6 +593,9 @@ def infer_target(rd: dict) -> dict:
 
     n_fails = rd["bootstrax"].get("n_failures", 0)
 
+    if args.ignore_n_failures:
+        n_fails = 0
+
     if n_fails:
         log.debug(f"Deleting targets")
         targets = keep_target(targets, remove_target_after_fails, n_fails)
@@ -843,6 +855,17 @@ def infer_mode(rd):
         "timeout": [1200, 1200, None, None, None, None, None, None, None, None, None, 2400],
     }
     if data_rate and args.infer_mode:
+
+        # Temporary solution
+        # It is a patch to try to process some ambe data without failing for memory 
+        # If we are doing ambe -> consider the maximum rate
+        # so that we have 10 cores and 12 messages for new ebs
+        # and we have     8 cores and 6 messages for old ebs
+        # added by Carlo on 19 April 2023
+        mode = str(rd.get('mode'))
+        if 'ambe' in mode:
+            data_rate = 550
+
         df = pd.DataFrame(benchmark)
         if data_rate not in benchmark["mbs"]:
             df.loc[len(df.index)] = [data_rate, None, None, None, None, None]
@@ -857,6 +880,10 @@ def infer_mode(rd):
     else:
         result = dict(cores=args.cores, max_messages=args.max_messages, timeout=1000)
     n_fails = rd["bootstrax"].get("n_failures", 0)
+
+    if args.ignore_n_failures:
+        n_fails = 0
+
     if n_fails:
         # Exponentially lower resources & increase timeout
         result = dict(
@@ -1289,8 +1316,15 @@ def run_strax(
     clear_shm()
 
     if debug:
+        
         logging.basicConfig(force=True)
         logging.getLogger().setLevel(logging.DEBUG)
+
+        # set logging level of numba to WARNING
+        logging.getLogger("numba").setLevel(logging.WARNING)
+
+
+
     try:
         log.info(f"Starting strax to make {run_id} with input dir {input_dir}")
 
