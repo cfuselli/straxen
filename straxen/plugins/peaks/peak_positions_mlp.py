@@ -1,25 +1,19 @@
 import strax
-import straxen
-from straxen.plugins.peaks._peak_positions_base import PeakPositionsBaseNT
-
+from ._peak_positions_base import PeakPositionsBase
 
 export, __all__ = strax.exporter()
 
 
 @export
-class PeakPositionsMLP(PeakPositionsBaseNT):
-    """Multilayer Perceptron (MLP) neural net for position reconstruction"""
-    provides = "peak_positions_mlp"
-    algorithm = "mlp"
+class PeakPositionsMLP(PeakPositionsBase):
 
-    tf_model_mlp = straxen.URLConfig(
-        default=f'tf://'
-                f'resource://'
-                f'cmt://{algorithm}_model'
-                f'?version=ONLINE'
-                f'&run_id=plugin.run_id'
-                f'&fmt=abs_path',
-        help='MLP model. Should be opened using the "tf" descriptor. '
-             'Set to "None" to skip computation',
-        cache=3,
+    __version__ = "0.0.0"
+    child_plugin = True
+    algorithm = "mlp"
+    depends_on = (
+        "peaklet_positions_mlp",
+        "enhanced_peaklet_classification",
+        "merged_s2s",
+        "merged_s2_positions_mlp",
     )
+    provides = "peak_positions_mlp"

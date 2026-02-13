@@ -1,10 +1,8 @@
-__version__ = '2.0.6'
+# mypy: disable-error-code="no-redef"
+__version__ = "3.2.7"
 
 from utilix import uconfig
 from .common import *
-# contexts.py below
-from .corrections_services import *
-from .get_corrections import *
 
 from .itp_map import *
 from .matplotlib_utils import *
@@ -13,10 +11,7 @@ from .misc import *
 
 from .scada import *
 from .bokeh_utils import *
-from .url_config import *
-
-from . import legacy
-from .legacy import *
+from .config.url_config import *
 
 from . import plugins
 from .plugins import *
@@ -26,12 +21,19 @@ from .storage import *
 
 from . import analyses
 
+from . import config
+
+from . import units
+
 # Do not make all contexts directly available under straxen.
 # Otherwise, we have straxen.demo() etc.
 from . import contexts
 
 from . import test_utils
 from .test_utils import *
+
+from . import docs_utils
+from .docs_utils import *
 
 from . import daq_core
 

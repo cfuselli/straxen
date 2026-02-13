@@ -1,6 +1,5 @@
-
 # Entrypoint loading logic
-# Can be used to register context methods, mini-analyses, 
+# Can be used to register context methods, mini-analyses,
 # URLConfig protocols etc by other packeges when straxen is
 # imported.
 # The nice optimization of the different import attempts
@@ -21,7 +20,7 @@ try:
             eps = importlib_metadata.entry_points(group="straxen")
         except TypeError:
             # Load-time selection requires Python >= 3.10 or importlib_metadata >= 3.6,
-            # so we'll retain this fallback logic for some time to come.  See also
+            # so we'll retain this fallback logic for some time to come. See also
             # https://importlib-metadata.readthedocs.io/en/latest/using.html
             eps = importlib_metadata.entry_points().get("straxen", [])
         yield from eps

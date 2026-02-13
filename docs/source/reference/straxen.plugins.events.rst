@@ -52,6 +52,14 @@ straxen.plugins.events.event\_basics module
    :undoc-members:
    :show-inheritance:
 
+straxen.plugins.events.event\_basics\_som module
+------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_basics_som
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 straxen.plugins.events.event\_info module
 -----------------------------------------
 
@@ -64,6 +72,14 @@ straxen.plugins.events.event\_info\_double module
 -------------------------------------------------
 
 .. automodule:: straxen.plugins.events.event_info_double
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_nearest\_triggering module
+--------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_nearest_triggering
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,10 +100,66 @@ straxen.plugins.events.event\_positions module
    :undoc-members:
    :show-inheritance:
 
+straxen.plugins.events.event\_s1\_positions\_cnn module
+-------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_s1_positions_cnn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_s2\_positions\_flow module
+-------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_s2_positions_flow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_s2\_positions\_cnn module
+-------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_s2_positions_cnn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_s2\_positions\_gcn module
+-------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_s2_positions_gcn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_s2\_positions\_mlp module
+-------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_s2_positions_mlp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_se\_sensity module
+------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_se_sensity
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 straxen.plugins.events.event\_shadow module
 -------------------------------------------
 
 .. automodule:: straxen.plugins.events.event_shadow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.event\_top\_bottom\_params module
+--------------------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_top_bottom_params
    :members:
    :undoc-members:
    :show-inheritance:
@@ -100,10 +172,34 @@ straxen.plugins.events.event\_w\_bayes\_class module
    :undoc-members:
    :show-inheritance:
 
+straxen.plugins.events.event\_waveform module
+---------------------------------------------
+
+.. automodule:: straxen.plugins.events.event_waveform
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 straxen.plugins.events.events module
 ------------------------------------
 
 .. automodule:: straxen.plugins.events.events
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.local\_minimum\_info module
+--------------------------------------------------
+
+.. automodule:: straxen.plugins.events.local_minimum_info
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+straxen.plugins.events.multi\_scatter module
+--------------------------------------------
+
+.. automodule:: straxen.plugins.events.multi_scatter
    :members:
    :undoc-members:
    :show-inheritance:

@@ -117,9 +117,8 @@ For more information on this, checkout the
 
 Pre-configured monitoring tools
 -------------------------------
-For XENONnT we have the private monitor called  `olmo <https://github.com/XENONnT/olmo>`_
+For XENONnT we have the private monitor called `olmo <https://github.com/XENONnT/olmo>`_
 which is only visible for XENONnT members.
 
 
 *Last updated 2021-05-07. Joran Angevaare*
-
